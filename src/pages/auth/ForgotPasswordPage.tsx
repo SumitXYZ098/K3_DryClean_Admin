@@ -1,14 +1,22 @@
 import type React from "react";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
 import AuthLayout from "./AuthLayout";
 import AuthCard from "../../components/common/AuthCard";
 import Logo from "../../components/common/Logo";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
+import AuthFooter from "../../components/common/AuthFooter";
+import useLoadingStore from "../../store/useLoadingStore";
+import useSnackbarStore from "../../store/useSnackbarStore";
+
+interface ForgotPasswordInputs {
+  email: string;
+}
 
 export const ForgotPasswordPage: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [headingText, setHeadingText] = useState("Forgot Password?");
@@ -16,21 +24,44 @@ export const ForgotPasswordPage: React.FC = () => {
     "Enter your email address and we'll send you a link to reset your password.",
   );
 
-  const handleResetRequest = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
+  const { showLoading, hideLoading } = useLoadingStore();
+  const { showSnackbar } = useSnackbarStore();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordInputs>({
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = (data: ForgotPasswordInputs) => {
+    const userEmail = data.email;
     setIsLoading(true);
+    showLoading("Sending verification code...");
 
     // Simulate password reset API request
     setTimeout(() => {
+      hideLoading();
       setIsLoading(false);
       setIsSent(true);
       setHeadingText("Check your inbox");
       setSubText(
-        `We've sent a password reset link to ${email}. Please check your spam folder if you don't see it.`,
+        `We've sent a 6-digit verification code to ${userEmail}. Please enter the code to proceed.`,
       );
-    }, 1500);
+
+      showSnackbar({
+        message: `OTP verification code sent to ${userEmail}!`,
+        type: "success",
+      });
+
+      // Auto navigate to verify-otp page after short delay
+      setTimeout(() => {
+        navigate("/verify-otp", { state: { email: userEmail } });
+      }, 1200);
+    }, 1200);
   };
 
   return (
@@ -52,32 +83,31 @@ export const ForgotPasswordPage: React.FC = () => {
         </div>
 
         {/* Forgot Password Form */}
-        <form
-          className={`w-full space-y-lg ${
-            isSent ? "opacity-60 pointer-events-none" : ""
-          }`}
-          onSubmit={handleResetRequest}
-        >
+        <form className="w-full space-y-lg" onSubmit={handleSubmit(onSubmit)}>
           {/* Email Input */}
           <Input
             id="email"
-            name="email"
             type="email"
             label="Email Address"
             placeholder="name@k3drycleaning.com"
             leftIcon="mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isSent}
+            disabled={isSent || isLoading}
             autoFocus
+            error={errors.email?.message}
+            {...register("email", {
+              required: "Email address is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Please enter a valid email address",
+              },
+            })}
           />
 
           {/* Primary Action Button */}
           <Button
             type="submit"
             isLoading={isLoading}
-            loadingText="Sending..."
+            loadingText="Sending Code..."
             disabled={isSent}
             variant={isSent ? "success" : "primary"}
             rightIcon={!isSent && !isLoading ? "arrow_forward" : undefined}
@@ -86,7 +116,7 @@ export const ForgotPasswordPage: React.FC = () => {
               isSent ? "btn-k3-primary bg-emerald-600" : "btn-k3-primary"
             }
           >
-            {isSent ? "Link Sent!" : "Send Reset Link"}
+            {isSent ? "Code Sent! Redirecting..." : "Send Reset Link"}
           </Button>
         </form>
 
@@ -108,9 +138,7 @@ export const ForgotPasswordPage: React.FC = () => {
       </AuthCard>
 
       {/* Footer Support Info */}
-      <p className="mt-xl text-center font-label-sm text-label-sm text-on-surface-variant/60">
-        © 2024 K3 Dry Cleaning. Enterprise Suite v4.2
-      </p>
+      <AuthFooter showLinks={false} />
     </AuthLayout>
   );
 };
