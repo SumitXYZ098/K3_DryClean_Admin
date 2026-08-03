@@ -1,0 +1,130 @@
+import type React from "react";
+import type { Customer } from "../../pages/customers/CustomersPage";
+
+export interface CustomerDetailModalProps {
+  customer: Customer | null;
+  onClose: () => void;
+}
+
+export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
+  customer,
+  onClose,
+}) => {
+  if (!customer) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-xs p-md animate-fade-in">
+      <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-xl max-w-fit w-full shadow-2xl space-y-lg animate-scale-up">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-outline-variant pb-md">
+          <div className="flex items-center gap-md">
+            {customer.avatarUrl ? (
+              <img
+                src={customer.avatarUrl}
+                alt={customer.name}
+                className="w-12 h-12 rounded-full object-cover border border-outline-variant shrink-0"
+              />
+            ) : (
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 ${
+                  customer.initialsBg || "bg-primary-fixed text-primary"
+                }`}
+              >
+                {customer.initials || "K3"}
+              </div>
+            )}
+            <div>
+              <h3 className="font-headline-md text-headline-md text-on-surface">
+                {customer.name}
+              </h3>
+              <p className="text-label-sm text-secondary">
+                Customer ID: {customer.id}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-secondary hover:text-on-surface p-1 rounded-md cursor-pointer transition-colors"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        {/* Stats Summary Cards */}
+        <div className="grid grid-cols-2 gap-md py-sm">
+          <div className="p-md bg-surface-container-low rounded-md border border-outline-variant/40 space-y-1">
+            <span className="text-label-sm text-secondary uppercase font-bold tracking-wider">
+              Total Orders
+            </span>
+            <p className="font-headline-md text-on-surface font-bold">
+              {customer.totalOrders}
+            </p>
+          </div>
+
+          <div className="p-md bg-surface-container-low rounded-md border border-outline-variant/40 space-y-1">
+            <span className="text-label-sm text-secondary uppercase font-bold tracking-wider">
+              Wallet Balance
+            </span>
+            <p
+              className={`font-headline-md font-bold ${
+                customer.walletBalance < 0 ? "text-error" : "text-primary"
+              }`}
+            >
+              {customer.walletBalance < 0
+                ? `-₹${Math.abs(customer.walletBalance).toFixed(2)}`
+                : `₹${customer.walletBalance.toFixed(2)}`}
+            </p>
+          </div>
+        </div>
+
+        {/* Detail List */}
+        <div className="space-y-sm text-body-md">
+          <div className="flex items-center justify-between py-2 border-b border-outline-variant/40">
+            <span className="text-secondary font-medium">Email:</span>
+            <span className="text-on-surface font-medium">
+              {customer.email}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-outline-variant/40">
+            <span className="text-secondary font-medium">Phone:</span>
+            <span className="text-on-surface font-medium">
+              {customer.phone}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-outline-variant/40">
+            <span className="text-secondary font-medium">Account Status:</span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                customer.status === "Active"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {customer.status}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-secondary font-medium">Last Order Date:</span>
+            <span className="text-on-surface font-medium">
+              {customer.lastOrder}
+            </span>
+          </div>
+        </div>
+
+        {/* Footer Action */}
+        <div className="pt-md border-t border-outline-variant flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-lg py-2 bg-primary text-white font-title-md rounded-default hover:bg-primary-container transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            Close Details
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CustomerDetailModal;

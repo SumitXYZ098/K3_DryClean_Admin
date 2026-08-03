@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import AuthLayout from "./AuthLayout";
 import AuthCard from "../../components/common/AuthCard";
@@ -9,8 +9,8 @@ import Input from "../../components/common/Input";
 import Checkbox from "../../components/common/Checkbox";
 import Button from "../../components/common/Button";
 import AuthFooter from "../../components/common/AuthFooter";
-import useLoadingStore from "../../store/useLoadingStore";
 import useSnackbarStore from "../../store/useSnackbarStore";
+import useAuthHook from "../../hooks/useAuthHook";
 
 interface LoginFormInputs {
   email: string;
@@ -19,15 +19,15 @@ interface LoginFormInputs {
 }
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const successMessage = (location.state as { message?: string })?.message;
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [btnText, setBtnText] = useState("Login to Dashboard");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const { showLoading, hideLoading } = useLoadingStore();
+  const { login, isLoading } = useAuthHook();
   const { showSnackbar } = useSnackbarStore();
 
   const {
@@ -42,28 +42,25 @@ export const LoginPage: React.FC = () => {
     },
   });
 
-  const onSubmit = (data: LoginFormInputs) => {
-    setIsLoading(true);
+  const onSubmit = async (data: LoginFormInputs) => {
     setBtnText("Authenticating...");
-    showLoading("Authenticating user credentials...");
 
-    // Simulate API authentication call
-    setTimeout(() => {
-      hideLoading();
-      setIsLoading(false);
-      setIsSuccess(true);
-      setBtnText("Verification Sent");
-
-      showSnackbar({
-        message: `Welcome back, ${data.email.split("@")[0]}! Logging in...`,
-        type: "success",
+    try {
+      await login({
+        identifier: data.email,
+        password: data.password,
+        remember: data.remember,
       });
 
+      setIsSuccess(true);
+      setBtnText("Success!");
+
       setTimeout(() => {
-        setIsSuccess(false);
-        setBtnText("Login to Dashboard");
-      }, 2000);
-    }, 1500);
+        navigate("/");
+      }, 1000);
+    } catch {
+      setBtnText("Login to Dashboard");
+    }
   };
 
   return (
@@ -91,6 +88,7 @@ export const LoginPage: React.FC = () => {
             label="Email Address"
             placeholder="admin@k3laundry.com"
             leftIcon="mail"
+            disabled={isLoading}
             error={errors.email?.message}
             {...register("email", {
               required: "Email is required",
@@ -108,6 +106,7 @@ export const LoginPage: React.FC = () => {
             label="Password"
             placeholder="••••••••"
             leftIcon="lock"
+            disabled={isLoading}
             error={errors.password?.message}
             topRightLabel={
               <Link
@@ -138,6 +137,7 @@ export const LoginPage: React.FC = () => {
           <Checkbox
             id="remember"
             label="Remember device for 30 days"
+            disabled={isLoading}
             {...register("remember")}
           />
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
@@ -5,8 +6,8 @@ import { useForm, useWatch } from "react-hook-form";
 import AuthLayout from "./AuthLayout";
 import Logo from "../../components/common/Logo";
 import Input from "../../components/common/Input";
-import useLoadingStore from "../../store/useLoadingStore";
 import useSnackbarStore from "../../store/useSnackbarStore";
+import useAuthHook from "../../hooks/useAuthHook";
 
 interface OtpFormInputs {
   digit0: string;
@@ -23,11 +24,11 @@ export const VerifyOtpPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get email passed from forgot password page or fallback
-  const userEmail =
-    (location.state as { email?: string })?.email || "your email address";
+  // Get email & resetToken passed from previous screen
+  const locationState = location.state as { email?: string; resetToken?: string } | undefined;
+  const userEmail = locationState?.email || "";
+  const initialResetToken = locationState?.resetToken || "";
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [resendStatus, setResendStatus] = useState<"idle" | "sent">("idle");
   const [resendTimer, setResendTimer] = useState(0);
@@ -35,8 +36,10 @@ export const VerifyOtpPage: React.FC = () => {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const { showLoading, hideLoading } = useLoadingStore();
+  const { verifyOtp, resendOtp, isLoading, resetToken: hookResetToken } = useAuthHook();
   const { showSnackbar } = useSnackbarStore();
+
+  const activeResetToken = initialResetToken || hookResetToken || "";
 
   const { register, handleSubmit, setValue, getValues, control } = useForm<OtpFormInputs>({
     defaultValues: {
@@ -73,7 +76,7 @@ export const VerifyOtpPage: React.FC = () => {
   // Handle keyboard events (Backspace, Arrow keys)
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>,
+    e: React.KeyboardEvent<HTMLInputElement>
   ) => {
     const fieldName = `digit${index}` as keyof OtpFormInputs;
     const currentVal = formValues?.[fieldName] || getValues(fieldName);
@@ -111,31 +114,35 @@ export const VerifyOtpPage: React.FC = () => {
   };
 
   // Resend code logic
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     if (resendStatus === "sent" || resendTimer > 0) return;
 
-    setResendStatus("sent");
-    setResendTimer(30);
-
-    showSnackbar({
-      message: `A new 6-digit OTP code has been sent to ${userEmail}.`,
-      type: "info",
-    });
-
-    const interval = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setResendStatus("idle");
-          return 0;
-        }
-        return prev - 1;
+    try {
+      await resendOtp({
+        identifier: userEmail,
+        resetToken: activeResetToken,
       });
-    }, 1000);
+
+      setResendStatus("sent");
+      setResendTimer(30);
+
+      const interval = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setResendStatus("idle");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch {
+      // Error is alerted via snackbar
+    }
   };
 
   // Form Submission
-  const onSubmit = (data: OtpFormInputs) => {
+  const onSubmit = async (data: OtpFormInputs) => {
     const fullCode = Object.values(data).join("");
     if (fullCode.length < OTP_LENGTH) {
       const msg = "Please enter all 6 digits";
@@ -144,28 +151,32 @@ export const VerifyOtpPage: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
     setErrorMessage("");
-    showLoading("Verifying OTP code...");
 
-    // Simulate OTP verification API request
-    setTimeout(() => {
-      hideLoading();
-      setIsLoading(false);
-      setIsVerified(true);
-
-      showSnackbar({
-        message: "OTP Code Verified Successfully!",
-        type: "success",
+    try {
+      const response = await verifyOtp({
+        identifier: userEmail,
+        resetToken: activeResetToken,
+        otp: fullCode,
       });
 
-      // Navigate to Set New Password screen after success animation
+      setIsVerified(true);
+
+      // Navigate to Set New Password screen with updated resetToken
       setTimeout(() => {
         navigate("/set-new-password", {
-          state: { email: userEmail, verified: true },
+          state: {
+            email: userEmail,
+            resetToken: response.resetToken || activeResetToken,
+            verified: true,
+          },
         });
       }, 1200);
-    }, 1500);
+    } catch (err: any) {
+      setErrorMessage(
+        err.response?.data?.message || "Invalid or expired OTP code."
+      );
+    }
   };
 
   return (
@@ -182,7 +193,9 @@ export const VerifyOtpPage: React.FC = () => {
           </h1>
           <p className="text-body-md text-on-surface-variant text-center max-w-70">
             Enter the 6-digit code sent to{" "}
-            <span className="font-medium text-on-surface">{userEmail}</span>.
+            <span className="font-medium text-on-surface">
+              {userEmail || "your email address"}
+            </span>.
           </p>
         </div>
 

@@ -56,7 +56,7 @@ export const SnackbarWrapper: React.FC<SnackbarWrapperProps> = ({
           aria-live="assertive"
         >
           <div
-            className={`flex items-center gap-md px-md py-3 rounded-xl border shadow-xl backdrop-blur-md transition-all ${currentStyle.bgClass}`}
+            className={`flex items-center gap-md px-md py-3 rounded-md border shadow-xl backdrop-blur-md transition-all ${currentStyle.bgClass}`}
           >
             {/* Status Icon */}
             <span

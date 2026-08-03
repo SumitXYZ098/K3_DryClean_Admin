@@ -8,8 +8,7 @@ import Logo from "../../components/common/Logo";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import AuthFooter from "../../components/common/AuthFooter";
-import useLoadingStore from "../../store/useLoadingStore";
-import useSnackbarStore from "../../store/useSnackbarStore";
+import useAuthHook from "../../hooks/useAuthHook";
 
 interface ForgotPasswordInputs {
   email: string;
@@ -17,15 +16,13 @@ interface ForgotPasswordInputs {
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [headingText, setHeadingText] = useState("Forgot Password?");
   const [subText, setSubText] = useState(
     "Enter your email address and we'll send you a link to reset your password.",
   );
 
-  const { showLoading, hideLoading } = useLoadingStore();
-  const { showSnackbar } = useSnackbarStore();
+  const { forgotPassword, isLoading } = useAuthHook();
 
   const {
     register,
@@ -37,31 +34,26 @@ export const ForgotPasswordPage: React.FC = () => {
     },
   });
 
-  const onSubmit = (data: ForgotPasswordInputs) => {
+  const onSubmit = async (data: ForgotPasswordInputs) => {
     const userEmail = data.email;
-    setIsLoading(true);
-    showLoading("Sending verification code...");
 
-    // Simulate password reset API request
-    setTimeout(() => {
-      hideLoading();
-      setIsLoading(false);
+    try {
+      const response = await forgotPassword({ identifier: userEmail });
       setIsSent(true);
       setHeadingText("Check your inbox");
       setSubText(
         `We've sent a 6-digit verification code to ${userEmail}. Please enter the code to proceed.`,
       );
 
-      showSnackbar({
-        message: `OTP verification code sent to ${userEmail}!`,
-        type: "success",
-      });
-
-      // Auto navigate to verify-otp page after short delay
+      // Auto navigate to verify-otp page after short delay passing email & resetToken
       setTimeout(() => {
-        navigate("/verify-otp", { state: { email: userEmail } });
+        navigate("/verify-otp", {
+          state: { email: userEmail, resetToken: response.resetToken },
+        });
       }, 1200);
-    }, 1200);
+    } catch {
+      // Handled in hook error handler
+    }
   };
 
   return (
