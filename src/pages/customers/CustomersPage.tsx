@@ -1,8 +1,11 @@
 import type React from "react";
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import useLoadingStore from "../../store/useLoadingStore";
 import useHeaderStore from "../../store/useHeaderStore";
+import useCustomerStore, { type Customer } from "../../store/useCustomerStore";
+export type { Customer };
 import CustomerFilterBar from "../../components/customers/CustomerFilterBar";
 import CustomerTable from "../../components/customers/CustomerTable";
 import AddCustomerModal, {
@@ -10,89 +13,14 @@ import AddCustomerModal, {
 } from "../../components/customers/AddCustomerModal";
 import CustomerDetailModal from "../../components/customers/CustomerDetailModal";
 
-export interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  totalOrders: number;
-  walletBalance: number;
-  status: "Active" | "Suspended";
-  lastOrder: string;
-  avatarUrl?: string;
-  initials?: string;
-  initialsBg?: string;
-}
-
-const initialCustomers: Customer[] = [
-  {
-    id: "#K3-4902",
-    name: "Sarah Miller",
-    email: "sarah.m@example.com",
-    phone: "(555) 123-4567",
-    totalOrders: 42,
-    walletBalance: 124.5,
-    status: "Active",
-    lastOrder: "Oct 24, 2023",
-    initials: "SM",
-    initialsBg: "bg-primary-fixed text-primary font-bold",
-  },
-  {
-    id: "#K3-4811",
-    name: "David Chen",
-    email: "d.chen@techmail.io",
-    phone: "(555) 987-6543",
-    totalOrders: 15,
-    walletBalance: 0.0,
-    status: "Active",
-    lastOrder: "Nov 02, 2023",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256",
-  },
-  {
-    id: "#K3-3762",
-    name: "Robert Lewis",
-    email: "rlewis@provider.com",
-    phone: "(555) 444-3322",
-    totalOrders: 8,
-    walletBalance: -12.4,
-    status: "Suspended",
-    lastOrder: "Aug 15, 2023",
-    initials: "RL",
-    initialsBg: "bg-secondary-container text-secondary font-bold",
-  },
-  {
-    id: "#K3-5001",
-    name: "Emily Knight",
-    email: "em.knight@web.com",
-    phone: "(555) 222-0000",
-    totalOrders: 112,
-    walletBalance: 560.0,
-    status: "Active",
-    lastOrder: "Nov 05, 2023",
-    initials: "EK",
-    initialsBg: "bg-primary-fixed text-primary font-bold",
-  },
-  {
-    id: "#K3-2219",
-    name: "Martha Stewart",
-    email: "m.stewart@domain.net",
-    phone: "(555) 777-8899",
-    totalOrders: 24,
-    walletBalance: 88.25,
-    status: "Active",
-    lastOrder: "Oct 28, 2023",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256",
-  },
-];
-
 export const CustomersPage: React.FC = () => {
+  const navigate = useNavigate();
   const { showSnackbar } = useSnackbarStore();
   const { showLoading, hideLoading } = useLoadingStore();
   const { setSearchQuery, setCustomActionHandler } = useHeaderStore();
+  const { customers, addCustomer, toggleCustomerStatus, deleteCustomer } =
+    useCustomerStore();
 
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [spendFilter, setSpendFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
@@ -108,13 +36,13 @@ export const CustomersPage: React.FC = () => {
   // Register custom action handler for TopNavigationBar primary button on this page
   useEffect(() => {
     setCustomActionHandler(() => {
-      setIsAddModalOpen(true);
+      navigate("/customers/add");
     });
 
     return () => {
       setCustomActionHandler(null);
     };
-  }, [setCustomActionHandler]);
+  }, [setCustomActionHandler, navigate]);
 
   // Filtered customers logic
   const filteredCustomers = useMemo(() => {
@@ -188,29 +116,13 @@ export const CustomersPage: React.FC = () => {
   };
 
   const handleAddCustomer = (formData: AddCustomerFormInputs) => {
-    const initials = formData.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-
-    const newCustomer: Customer = {
-      id: `#K3-${randomNum}`,
+    const newCustomer = addCustomer({
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-      totalOrders: 0,
       walletBalance: parseFloat(formData.walletBalance) || 0,
-      status: "Active",
-      lastOrder: "Just now",
-      initials,
-      initialsBg: "bg-primary-fixed text-primary font-bold",
-    };
+    });
 
-    setCustomers((prev) => [newCustomer, ...prev]);
     setIsAddModalOpen(false);
 
     showSnackbar({
@@ -221,9 +133,7 @@ export const CustomersPage: React.FC = () => {
 
   const handleToggleStatus = (customer: Customer) => {
     const newStatus = customer.status === "Active" ? "Suspended" : "Active";
-    setCustomers((prev) =>
-      prev.map((c) => (c.id === customer.id ? { ...c, status: newStatus } : c)),
-    );
+    toggleCustomerStatus(customer.id);
     setOpenActionMenuId(null);
     showSnackbar({
       message: `Customer ${customer.name} status updated to ${newStatus}`,
@@ -232,7 +142,7 @@ export const CustomersPage: React.FC = () => {
   };
 
   const handleDeleteCustomer = (customer: Customer) => {
-    setCustomers((prev) => prev.filter((c) => c.id !== customer.id));
+    deleteCustomer(customer.id);
     setOpenActionMenuId(null);
     showSnackbar({
       message: `Customer ${customer.name} removed from directory`,

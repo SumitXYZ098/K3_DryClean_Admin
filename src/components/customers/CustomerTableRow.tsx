@@ -1,5 +1,5 @@
 import type React from "react";
-import type { Customer } from "../../pages/customers/CustomersPage";
+import type { Customer } from "../../store/useCustomerStore";
 
 export interface CustomerTableRowProps {
   customer: Customer;

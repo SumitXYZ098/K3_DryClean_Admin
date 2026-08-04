@@ -7,6 +7,7 @@ import SetNewPasswordPage from "../pages/auth/SetNewPasswordPage";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import CustomersPage from "../pages/customers/CustomersPage";
+import AddCustomerPage from "../pages/customers/AddCustomerPage";
 import PlaceholderPage from "../pages/common/PlaceholderPage";
 import useAuthStore from "../store/useAuthStore";
 
@@ -100,6 +101,8 @@ export const AppRoute = () => {
           }
         />
         <Route path="/customers" element={<CustomersPage />} />
+        <Route path="/customers/add" element={<AddCustomerPage />} />
+        <Route path="/customers/new" element={<AddCustomerPage />} />
         <Route
           path="/drivers"
           element={

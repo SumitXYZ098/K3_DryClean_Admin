@@ -280,6 +280,12 @@ body {
 }
 
 /* Custom OTP and Auth field styles */
+.form-input-focus:focus {
+  outline: none;
+  border-color: #b7000c;
+  box-shadow: 0 0 0 2px rgba(183, 0, 12, 0.1);
+}
+
 .otp-input:focus {
   border-color: var(--primary, #b7000c);
   box-shadow: 0 0 0 2px rgba(183, 0, 12, 0.15);
