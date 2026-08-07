@@ -18,6 +18,39 @@ export const Pagination: React.FC<PaginationProps> = ({
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
+  // Generate page numbers dynamically around currentPage
+  const getPageNumbers = () => {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+
+      if (currentPage <= 3) {
+        startPage = 1;
+        endPage = 5;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 4;
+        endPage = totalPages;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+  const showLastPageShortcut =
+    totalPages > 5 && !pageNumbers.includes(totalPages);
+
   return (
     <div className="px-lg py-md bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-md border-t border-outline-variant">
       <p className="text-body-md text-secondary">
@@ -34,6 +67,7 @@ export const Pagination: React.FC<PaginationProps> = ({
 
       <div className="flex items-center gap-sm">
         <button
+          type="button"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
           className="px-md py-1.5 border border-outline-variant rounded-default bg-surface hover:bg-surface-container transition-colors text-secondary flex items-center gap-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
@@ -48,11 +82,11 @@ export const Pagination: React.FC<PaginationProps> = ({
         </button>
 
         <div className="flex items-center gap-xs">
-          {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
-            const pageNum = idx + 1;
+          {pageNumbers.map((pageNum) => {
             const isCurrent = pageNum === currentPage;
             return (
               <button
+                type="button"
                 key={pageNum}
                 onClick={() => onPageChange(pageNum)}
                 className={`w-9 h-9 flex items-center justify-center rounded-default font-medium transition-colors cursor-pointer ${
@@ -65,10 +99,11 @@ export const Pagination: React.FC<PaginationProps> = ({
               </button>
             );
           })}
-          {totalPages > 5 && (
+          {showLastPageShortcut && (
             <>
               <span className="px-2 text-secondary">...</span>
               <button
+                type="button"
                 onClick={() => onPageChange(totalPages)}
                 className={`w-9 h-9 flex items-center justify-center rounded-default font-medium transition-colors cursor-pointer ${
                   currentPage === totalPages
@@ -83,6 +118,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         </div>
 
         <button
+          type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
           className="px-md py-1.5 border border-outline-variant rounded-default bg-surface hover:bg-surface-container transition-colors text-on-surface flex items-center gap-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"

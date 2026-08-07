@@ -1,10 +1,12 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import type React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import useLoadingStore from "../../store/useLoadingStore";
 import useHeaderStore from "../../store/useHeaderStore";
-import useCustomerStore, { type Customer } from "../../store/useCustomerStore";
+import useCustomerHook from "../../hooks/useCustomerHook";
+import type { Customer } from "../../store/useCustomerStore";
 export type { Customer };
 import CustomerFilterBar from "../../components/customers/CustomerFilterBar";
 import CustomerTable from "../../components/customers/CustomerTable";
@@ -17,9 +19,16 @@ export const CustomersPage: React.FC = () => {
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbarStore();
   const { showLoading, hideLoading } = useLoadingStore();
-  const { setSearchQuery, setCustomActionHandler } = useHeaderStore();
-  const { customers, addCustomer, toggleCustomerStatus, deleteCustomer } =
-    useCustomerStore();
+  const { searchQuery, setSearchQuery, setCustomActionHandler } =
+    useHeaderStore();
+
+  const {
+    customers,
+    fetchCustomers,
+    addCustomer,
+    toggleCustomerStatus,
+    deleteCustomer,
+  } = useCustomerHook();
 
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [spendFilter, setSpendFilter] = useState("All");
@@ -32,6 +41,13 @@ export const CustomersPage: React.FC = () => {
   const [selectedCustomerDetail, setSelectedCustomerDetail] =
     useState<Customer | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch customer profiles from API on component mount
+  useEffect(() => {
+    fetchCustomers().catch(() => {
+      // Handled silently or via interceptor/hook error state
+    });
+  }, [fetchCustomers]);
 
   // Register custom action handler for TopNavigationBar primary button on this page
   useEffect(() => {
@@ -46,7 +62,20 @@ export const CustomersPage: React.FC = () => {
 
   // Filtered customers logic
   const filteredCustomers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
     return customers.filter((customer) => {
+      // Header Search filter
+      if (query) {
+        const matchName = customer.name?.toLowerCase().includes(query);
+        const matchEmail = customer.email?.toLowerCase().includes(query);
+        const matchPhone = customer.phone?.toLowerCase().includes(query);
+        const matchId = customer.id?.toLowerCase().includes(query);
+        if (!matchName && !matchEmail && !matchPhone && !matchId) {
+          return false;
+        }
+      }
+
       // Spend filter
       if (spendFilter === "High Value") {
         if (customer.walletBalance <= 500) return false;
@@ -74,13 +103,31 @@ export const CustomersPage: React.FC = () => {
 
       return true;
     });
-  }, [customers, spendFilter, dateFilter, statusFilter]);
+  }, [customers, searchQuery, spendFilter, dateFilter, statusFilter]);
+
+  // Reset page to 1 whenever search query or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, spendFilter, dateFilter, statusFilter]);
+
+  // Pagination calculation
+  const itemsPerPage = 10;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCustomers.length / itemsPerPage),
+  );
+
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredCustomers.slice(start, start + itemsPerPage);
+  }, [filteredCustomers, currentPage, itemsPerPage]);
 
   const handleClearFilters = () => {
     setSearchQuery("");
     setSpendFilter("All");
     setDateFilter("All");
     setStatusFilter("All");
+    setCurrentPage(1);
     showSnackbar({
       message: "All directory filters cleared",
       type: "info",
@@ -189,8 +236,8 @@ export const CustomersPage: React.FC = () => {
 
       {/* Customer Directory Table Component */}
       <CustomerTable
-        customers={filteredCustomers}
-        totalCount={customers.length}
+        customers={paginatedCustomers}
+        totalCount={filteredCustomers.length}
         selectedRowId={selectedRowId}
         openActionMenuId={openActionMenuId}
         onSelectRow={setSelectedRowId}
@@ -199,7 +246,7 @@ export const CustomersPage: React.FC = () => {
         onToggleStatus={handleToggleStatus}
         onDeleteCustomer={handleDeleteCustomer}
         currentPage={currentPage}
-        totalPages={1}
+        totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
 

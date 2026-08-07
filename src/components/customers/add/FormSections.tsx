@@ -73,10 +73,14 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             className={`w-full h-11 px-md rounded-lg border ${
               errors.phone ? "border-error" : "border-outline-variant"
             } bg-white text-body-md form-input-focus transition-all`}
-            placeholder="+1 (555) 000-0000"
+            placeholder="9876543210"
             type="tel"
+            maxLength={10}
             value={data.phone}
-            onChange={(e) => onChange("phone", e.target.value)}
+            onChange={(e) => {
+              const sanitized = e.target.value.replace(/\D/g, "").slice(0, 10);
+              onChange("phone", sanitized);
+            }}
           />
           {errors.phone && (
             <p className="text-label-sm text-error mt-1">{errors.phone}</p>

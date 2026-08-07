@@ -101,11 +101,19 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
             id="customer-phone"
             type="tel"
             label="Phone Number *"
-            placeholder="(555) 000-0000"
+            placeholder="9876543210"
+            maxLength={10}
             leftIcon="call"
             error={errors.phone?.message}
             {...register("phone", {
               required: "Phone number is required",
+              pattern: {
+                value: /^\d{10}$/,
+                message: "Phone number must be exactly 10 digits",
+              },
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+              },
             })}
           />
 

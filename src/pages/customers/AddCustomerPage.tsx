@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import useCustomerStore from "../../store/useCustomerStore";
+import useCustomerHook from "../../hooks/useCustomerHook";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import {
   BasicInfoSection,
@@ -17,7 +17,7 @@ import {
 
 export const AddCustomerPage: React.FC = () => {
   const navigate = useNavigate();
-  const { addCustomer } = useCustomerStore();
+  const { createCustomer, addCustomer } = useCustomerHook();
   const { showSnackbar } = useSnackbarStore();
 
   // Basic Info Form State
@@ -106,13 +106,15 @@ export const AddCustomerPage: React.FC = () => {
 
     if (!basicInfo.phone.trim()) {
       newErrors.phone = "Phone number is required";
+    } else if (basicInfo.phone.trim().length !== 10) {
+      newErrors.phone = "Phone number must be exactly 10 digits";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSaveCustomer = () => {
+  const handleSaveCustomer = async () => {
     if (!validateForm()) {
       showSnackbar({
         message: "Please fix required fields before saving.",
@@ -123,7 +125,37 @@ export const AddCustomerPage: React.FC = () => {
 
     setIsSaving(true);
 
-    setTimeout(() => {
+    const street = addressDetails.streetAddress.trim() || "N/A";
+    const city = addressDetails.city.trim() || "New Delhi";
+    const state = addressDetails.state.trim() || "Delhi";
+    const zipCode = addressDetails.zipCode.trim() || "110001";
+    const country = "India";
+    const fullAddress = `${street}, ${city}, ${state}, ${zipCode}`;
+
+    try {
+      await createCustomer({
+        fullName: basicInfo.fullName.trim(),
+        email: basicInfo.email.trim(),
+        phoneNumber: basicInfo.phone.trim(),
+        address: {
+          fullAddress,
+          city,
+          state,
+          postalCode: zipCode,
+          country,
+          addressType: addressDetails.addressType || "home",
+          streetAddress: street,
+        },
+      });
+
+      setIsSaving(false);
+      setIsSaved(true);
+
+      setTimeout(() => {
+        navigate("/customers");
+      }, 800);
+    } catch {
+      // Fallback to local store addition if backend error occurs
       const createdCustomer = addCustomer({
         name: basicInfo.fullName.trim(),
         email: basicInfo.email.trim(),
@@ -148,14 +180,14 @@ export const AddCustomerPage: React.FC = () => {
       setIsSaved(true);
 
       showSnackbar({
-        message: `Customer ${createdCustomer.name} created successfully!`,
-        type: "success",
+        message: `Customer ${createdCustomer.name} added to local state.`,
+        type: "info",
       });
 
       setTimeout(() => {
         navigate("/customers");
       }, 1000);
-    }, 1200);
+    }
   };
 
   return (

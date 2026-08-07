@@ -1,7 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
+import customerApi, {
+  type CustomerProfileData,
+  type CreateCustomerPayload,
+  type CustomerAddress,
+} from "../api/customerApi";
 
 export interface Customer {
   id: string;
+  numericId?: number;
+  documentId?: string;
   name: string;
   email: string;
   phone: string;
@@ -12,7 +20,7 @@ export interface Customer {
   avatarUrl?: string;
   initials?: string;
   initialsBg?: string;
-  addressType?: "home" | "work" | "other";
+  addressType?: "home" | "work" | "other" | string;
   streetAddress?: string;
   city?: string;
   state?: string;
@@ -24,73 +32,85 @@ export interface Customer {
   };
   specialInstructions?: string;
   preferredPaymentMethod?: "credit" | "cash" | "terms" | "digital";
+  customer_addresses?: CustomerAddress[];
+  rawProfile?: CustomerProfileData;
 }
 
-const initialCustomers: Customer[] = [
-  {
-    id: "#K3-4902",
-    name: "Sarah Miller",
-    email: "sarah.m@example.com",
-    phone: "(555) 123-4567",
-    totalOrders: 42,
-    walletBalance: 124.5,
-    status: "Active",
-    lastOrder: "Oct 24, 2023",
-    initials: "SM",
+export const mapCustomerProfileToCustomer = (
+  profile: CustomerProfileData
+): Customer => {
+  const initials =
+    (profile.fullName || profile.email || "CU")
+      .trim()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "CU";
+
+  const defaultAddr =
+    profile.customer_addresses?.find((a) => a.isDefaultAddress) ||
+    profile.customer_addresses?.[0];
+
+  const baseUrl = import.meta.env.VITE_PUBLIC_BASE_URL || "";
+  let avatarUrl: string | undefined = undefined;
+  if (profile.profileImage?.url) {
+    avatarUrl = profile.profileImage.url.startsWith("http")
+      ? profile.profileImage.url
+      : `${baseUrl}${profile.profileImage.url}`;
+  }
+
+  const formattedDate = profile.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Just now";
+
+  // Ensure id format starts with #K3- or retains provided customerId
+  let formattedId = profile.customerId || `K3-${profile.id}`;
+  if (!formattedId.startsWith("#")) {
+    formattedId = `#${formattedId}`;
+  }
+
+  return {
+    id: formattedId,
+    numericId: profile.id,
+    documentId: profile.documentId,
+    name: profile.fullName || "Unnamed Customer",
+    email: profile.email,
+    phone: profile.phoneNumber,
+    totalOrders: 0,
+    walletBalance: 0,
+    status:
+      profile.accountStatus === "suspended" || profile.accountStatus === "Suspended"
+        ? "Suspended"
+        : "Active",
+    lastOrder: formattedDate,
+    avatarUrl,
+    initials,
     initialsBg: "bg-primary-fixed text-primary font-bold",
-  },
-  {
-    id: "#K3-4811",
-    name: "David Chen",
-    email: "d.chen@techmail.io",
-    phone: "(555) 987-6543",
-    totalOrders: 15,
-    walletBalance: 0.0,
-    status: "Active",
-    lastOrder: "Nov 02, 2023",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256",
-  },
-  {
-    id: "#K3-3762",
-    name: "Robert Lewis",
-    email: "rlewis@provider.com",
-    phone: "(555) 444-3322",
-    totalOrders: 8,
-    walletBalance: -12.4,
-    status: "Suspended",
-    lastOrder: "Aug 15, 2023",
-    initials: "RL",
-    initialsBg: "bg-secondary-container text-secondary font-bold",
-  },
-  {
-    id: "#K3-5001",
-    name: "Emily Knight",
-    email: "em.knight@web.com",
-    phone: "(555) 222-0000",
-    totalOrders: 112,
-    walletBalance: 560.0,
-    status: "Active",
-    lastOrder: "Nov 05, 2023",
-    initials: "EK",
-    initialsBg: "bg-primary-fixed text-primary font-bold",
-  },
-  {
-    id: "#K3-2219",
-    name: "Martha Stewart",
-    email: "m.stewart@domain.net",
-    phone: "(555) 777-8899",
-    totalOrders: 24,
-    walletBalance: 88.25,
-    status: "Active",
-    lastOrder: "Oct 28, 2023",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256",
-  },
-];
+    addressType: (defaultAddr?.addressType as "home" | "work" | "other") || "home",
+    streetAddress: defaultAddr?.streetAddress || "",
+    city: defaultAddr?.city || "",
+    state: defaultAddr?.state || "",
+    zipCode: defaultAddr?.postalCode || "",
+    customer_addresses: profile.customer_addresses || [],
+    rawProfile: profile,
+  };
+};
 
 interface CustomerState {
   customers: Customer[];
+  isLoading: boolean;
+  hasFetched: boolean;
+  error: string | null;
+
+  setCustomers: (customers: Customer[]) => void;
+  fetchCustomers: (force?: boolean) => Promise<Customer[]>;
+  createCustomer: (payload: CreateCustomerPayload) => Promise<Customer>;
+
   addCustomer: (newCustData: {
     name: string;
     email: string;
@@ -113,16 +133,62 @@ interface CustomerState {
   deleteCustomer: (id: string) => void;
 }
 
-export const useCustomerStore = create<CustomerState>((set) => ({
-  customers: initialCustomers,
+export const useCustomerStore = create<CustomerState>((set, get) => ({
+  customers: [],
+  isLoading: false,
+  hasFetched: false,
+  error: null,
+
+  setCustomers: (customers) => set({ customers, hasFetched: true }),
+
+  fetchCustomers: async (force = false) => {
+    // If already fetched and not forced, return cached state
+    if (get().hasFetched && !force && get().customers.length > 0) {
+      return get().customers;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      const response = await customerApi.getCustomer();
+      const mappedCustomers = (response.data || []).map(mapCustomerProfileToCustomer);
+      set({ customers: mappedCustomers, hasFetched: true, isLoading: false });
+      return mappedCustomers;
+    } catch (err: any) {
+      const errMsg =
+        err.response?.data?.message || err.message || "Failed to fetch customers";
+      set({ error: errMsg, isLoading: false });
+      throw err;
+    }
+  },
+
+  createCustomer: async (payload: CreateCustomerPayload) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await customerApi.createCustomer(payload);
+      const newCustomer = mapCustomerProfileToCustomer(response.data);
+      set((state) => ({
+        customers: [newCustomer, ...state.customers],
+        hasFetched: true,
+        isLoading: false,
+      }));
+      return newCustomer;
+    } catch (err: any) {
+      const errMsg =
+        err.response?.data?.message || err.message || "Failed to create customer";
+      set({ error: errMsg, isLoading: false });
+      throw err;
+    }
+  },
+
   addCustomer: (data) => {
-    const initials = data.name
-      .trim()
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "CU";
+    const initials =
+      data.name
+        .trim()
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2) || "CU";
 
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const newCustomer: Customer = {
@@ -152,6 +218,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
 
     return newCustomer;
   },
+
   toggleCustomerStatus: (id) =>
     set((state) => ({
       customers: state.customers.map((c) =>
@@ -160,6 +227,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
           : c
       ),
     })),
+
   deleteCustomer: (id) =>
     set((state) => ({
       customers: state.customers.filter((c) => c.id !== id),

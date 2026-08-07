@@ -22,6 +22,7 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
   onToggleStatus,
   onDelete,
 }) => {
+  console.log(customer.avatarUrl);
   return (
     <tr
       onClick={() => onSelect(customer.id)}
@@ -139,7 +140,7 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
         {isMenuOpen && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-6 top-12 w-48 bg-surface-container-lowest border border-outline-variant shadow-xl rounded-md py-2 z-30 animate-fade-in text-left"
+            className="absolute right-6 top-12 w-48 bg-surface-container-lowest border border-outline-variant shadow-xl rounded-md py-2 z-9999 animate-fade-in text-left"
           >
             <button
               type="button"
