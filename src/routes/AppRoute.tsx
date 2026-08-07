@@ -6,6 +6,8 @@ import VerifyOtpPage from "../pages/auth/VerifyOtpPage";
 import SetNewPasswordPage from "../pages/auth/SetNewPasswordPage";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import DashboardPage from "../pages/dashboard/DashboardPage";
+import OrdersPage from "../pages/orders/OrdersPage";
+import CreateOrderPage from "../pages/orders/CreateOrderPage";
 import CustomersPage from "../pages/customers/CustomersPage";
 import AddCustomerPage from "../pages/customers/AddCustomerPage";
 import PlaceholderPage from "../pages/common/PlaceholderPage";
@@ -90,16 +92,10 @@ export const AppRoute = () => {
       >
         <Route path="/" element={<DashboardPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route
-          path="/orders"
-          element={
-            <PlaceholderPage
-              title="Orders Management"
-              icon="receipt_long"
-              description="Monitor, update, and manage customer dry cleaning and laundry orders."
-            />
-          }
-        />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/orders/create" element={<CreateOrderPage />} />
+        <Route path="/orders/new" element={<CreateOrderPage />} />
+        <Route path="/orders/add" element={<CreateOrderPage />} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/customers/add" element={<AddCustomerPage />} />
         <Route path="/customers/new" element={<AddCustomerPage />} />
