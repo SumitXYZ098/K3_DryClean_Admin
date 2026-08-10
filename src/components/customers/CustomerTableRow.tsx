@@ -22,7 +22,6 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
   onToggleStatus,
   onDelete,
 }) => {
-  console.log(customer.avatarUrl);
   return (
     <tr
       onClick={() => onSelect(customer.id)}
