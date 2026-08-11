@@ -1,4 +1,5 @@
 import type React from "react";
+import dayjs from "dayjs";
 import type {
   Order,
   OrderStatus,
@@ -22,15 +23,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 }) => {
   if (!order) return null;
 
-  const statuses: OrderStatus[] = [
-    "Pending",
-    "Processing",
-    "Ready",
-    "Out for Delivery",
-    "Delivered",
+  const statuses: { value: OrderStatus; label: string }[] = [
+    { value: "pending", label: "Pending" },
+    { value: "pickup_assigned", label: "Pickup Assigned" },
+    { value: "picked_up", label: "Picked Up" },
+    { value: "processing", label: "Processing" },
+    { value: "delivery_assigned", label: "Ready" },
+    { value: "out_for_delivery", label: "Out for Delivery" },
+    { value: "delivered", label: "Delivered" },
   ];
 
-  const currentStatusIndex = statuses.indexOf(order.status as OrderStatus);
+  const currentStatusIndex = statuses.findIndex(
+    (s) => s.value === order.status,
+  );
 
   const handlePrintReceipt = () => {
     window.print();
@@ -51,7 +56,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </span>
             </div>
             <p className="text-xs text-secondary mt-0.5">
-              Created on {new Date(order.createdAt).toLocaleDateString()}
+              Created on {dayjs(order.createdAt).format("MMM D, YYYY h:mm A")}
             </p>
           </div>
           <button
@@ -68,10 +73,13 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <p className="text-label-sm uppercase font-bold text-on-surface-variant mb-3">
             Order Status Progress
           </p>
-          <div className="flex items-center justify-between relative">
-            {statuses.map((st, idx) => {
+          <div className="flex items-center justify-between relative gap-1">
+            {statuses.map((stObj, idx) => {
+              const st = stObj.value;
               const isPassed =
                 currentStatusIndex >= idx && currentStatusIndex !== -1;
+              const isPast =
+                currentStatusIndex !== -1 && idx < currentStatusIndex;
               const isCurrent = order.status === st;
 
               return (
@@ -81,28 +89,37 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 >
                   <button
                     type="button"
-                    onClick={() => onUpdateStatus(order.id, st)}
-                    title={`Click to set status to ${st}`}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
+                    disabled={isPast}
+                    onClick={() => !isPast && onUpdateStatus(order.id, st)}
+                    title={
+                      isPast
+                        ? `${stObj.label} (Completed)`
+                        : `Click to set status to ${stObj.label}`
+                    }
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isCurrent
-                        ? "bg-primary text-on-primary ring-4 ring-primary/20 scale-110"
-                        : isPassed
-                          ? "bg-green-600 text-white"
-                          : "bg-outline-variant text-secondary"
+                        ? "bg-primary text-on-primary ring-4 ring-primary/20 scale-110 cursor-pointer"
+                        : isPast
+                          ? "bg-green-600/70 text-white cursor-not-allowed opacity-80"
+                          : isPassed
+                            ? "bg-green-600 text-white cursor-pointer"
+                            : "bg-outline-variant text-secondary cursor-pointer hover:bg-outline"
                     }`}
                   >
                     {isPassed ? "✓" : idx + 1}
                   </button>
                   <span
-                    className={`text-[11px] mt-1 font-medium text-center ${
+                    className={`text-[10px] sm:text-[11px] mt-1 font-medium text-center leading-tight ${
                       isCurrent
                         ? "text-primary font-bold"
-                        : isPassed
-                          ? "text-on-surface"
-                          : "text-secondary"
+                        : isPast
+                          ? "text-on-surface-variant/70"
+                          : isPassed
+                            ? "text-on-surface"
+                            : "text-secondary"
                     }`}
                   >
-                    {st}
+                    {stObj.label}
                   </span>
                 </div>
               );
@@ -228,7 +245,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             <tbody className="divide-y divide-outline-variant">
               {order.items.map((item) => (
                 <tr key={item.id}>
-                  <td className="px-md py-2.5 font-medium text-on-surface">
+                  <td className="px-md py-2.5 font-medium text-on-surface capitalize">
                     {item.name}
                   </td>
                   <td className="px-md py-2.5 text-secondary">

@@ -86,7 +86,7 @@ export const LoginPage: React.FC = () => {
             id="email"
             type="email"
             label="Email Address"
-            placeholder="admin@k3laundry.com"
+            placeholder="Enter your email"
             leftIcon="mail"
             disabled={isLoading}
             error={errors.email?.message}
@@ -164,7 +164,8 @@ export const LoginPage: React.FC = () => {
             type="button"
             onClick={() =>
               showSnackbar({
-                message: "Please contact support@k3drycleaning.com to request access.",
+                message:
+                  "Please contact support@k3drycleaning.com to request access.",
                 type: "info",
               })
             }

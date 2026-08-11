@@ -52,33 +52,27 @@ export const OrderFilterBar: React.FC<OrderFilterBarProps> = ({
           className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-primary text-on-surface"
         >
           <option value="All">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Processing">Processing</option>
-          <option value="Ready">Ready</option>
-          <option value="Out for Delivery">Out for Delivery</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Issues">Issues</option>
+          <option value="pending">Pending</option>
+          <option value="pickup_assigned">Pickup Assigned</option>
+          <option value="picked_up">Picked Up</option>
+          <option value="processing">Processing</option>
+          <option value="delivery_assigned">Delivery Assigned</option>
+          <option value="out_for_delivery">Out for Delivery</option>
+          <option value="delivered">Delivered</option>
         </select>
       </div>
 
-      {/* Date Range Picker */}
+      {/* Date Filter */}
       <div className="flex flex-col gap-1">
         <label className="text-label-sm uppercase text-on-surface-variant font-bold">
-          Date Range
+          Filter By Date
         </label>
         <div className="relative">
-          <span
-            className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-base"
-            data-icon="calendar_month"
-          >
-            calendar_month
-          </span>
           <input
-            type="text"
+            type="date"
             value={dateRange}
             onChange={(e) => onDateRangeChange(e.target.value)}
-            placeholder="Oct 20 - Oct 27, 2023"
-            className="w-full pl-8 pr-2 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm outline-none text-on-surface focus:ring-1 focus:ring-primary"
+            className="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm outline-none text-on-surface focus:ring-1 focus:ring-primary cursor-pointer"
           />
         </div>
       </div>

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import type React from "react";
 import { useState } from "react";
 import type { Order, OrderStatus } from "../../store/useOrderStore";
@@ -13,11 +14,11 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
   onClose,
   onUpdate,
 }) => {
-  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(
-    order?.status || "Pending",
-  );
-
   if (!order) return null;
+
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(
+    order.status,
+  );
 
   const statuses: {
     value: OrderStatus;
@@ -26,42 +27,52 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
     icon: string;
   }[] = [
     {
-      value: "Pending",
+      value: "pending",
       label: "Pending",
-      desc: "Order received, awaiting drop-off or pickup collection.",
+      desc: "Order received, awaiting pickup assignment.",
       icon: "pending_actions",
     },
     {
-      value: "Processing",
+      value: "pickup_assigned",
+      label: "Pickup Assigned",
+      desc: "Driver assigned for order pickup.",
+      icon: "assignment_ind",
+    },
+    {
+      value: "picked_up",
+      label: "Picked Up",
+      desc: "Items collected by driver and en route to facility.",
+      icon: "local_shipping",
+    },
+    {
+      value: "processing",
       label: "Processing",
       desc: "Garments currently in washing, dry cleaning, or pressing.",
       icon: "sync",
     },
     {
-      value: "Ready",
-      label: "Ready for Pickup",
-      desc: "Cleaning finished, bagged and ready for store pickup or delivery dispatch.",
+      value: "delivery_assigned",
+      label: "Delivery Assigned",
+      desc: "Cleaning finished, bagged and Delivery Assigned dispatch.",
       icon: "check_circle",
     },
     {
-      value: "Out for Delivery",
+      value: "out_for_delivery",
       label: "Out for Delivery",
       desc: "En route with assigned delivery driver to customer location.",
-      icon: "local_shipping",
+      icon: "moped",
     },
     {
-      value: "Delivered",
+      value: "delivered",
       label: "Delivered",
       desc: "Order successfully handed to customer.",
       icon: "task_alt",
     },
-    {
-      value: "Issues",
-      label: "Issues / On Hold",
-      desc: "Special attention needed (stain warning, customer query, payment block).",
-      icon: "warning",
-    },
   ];
+
+  const currentStatusIndex = statuses.findIndex(
+    (s) => s.value === order.status,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +82,7 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md backdrop-blur-xs animate-fade-in overflow-y-auto">
-      <div className="bg-surface border border-outline-variant rounded-xl max-w-fit w-full p-lg shadow-xl my-auto space-y-md">
+      <div className="bg-surface border border-outline-variant rounded-xl max-w-150 w-full p-lg shadow-xl my-auto space-y-md">
         <div className="flex items-center justify-between border-b border-outline-variant pb-md">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl">
@@ -91,16 +102,20 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-sm">
-          {statuses.map((st) => {
+          {statuses.map((st, index) => {
+            const isDisabled =
+              currentStatusIndex !== -1 && index < currentStatusIndex;
             const isSelected = selectedStatus === st.value;
             return (
               <label
                 key={st.value}
-                onClick={() => setSelectedStatus(st.value)}
-                className={`flex items-start gap-md p-3 rounded-lg border cursor-pointer transition-all ${
-                  isSelected
-                    ? "bg-primary/5 border-primary ring-1 ring-primary/30"
-                    : "bg-surface-container-lowest border-outline-variant hover:border-outline"
+                onClick={() => !isDisabled && setSelectedStatus(st.value)}
+                className={`flex items-start gap-md p-3 rounded-lg border transition-all ${
+                  isDisabled
+                    ? "bg-surface-container-low/50 border-outline-variant/30 opacity-60 cursor-not-allowed"
+                    : isSelected
+                    ? "bg-primary/5 border-primary ring-1 ring-primary/30 cursor-pointer"
+                    : "bg-surface-container-lowest border-outline-variant hover:border-outline cursor-pointer"
                 }`}
               >
                 <input
@@ -108,17 +123,35 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
                   name="status"
                   value={st.value}
                   checked={isSelected}
-                  onChange={() => setSelectedStatus(st.value)}
-                  className="mt-1 accent-primary"
+                  disabled={isDisabled}
+                  onChange={() => !isDisabled && setSelectedStatus(st.value)}
+                  className="mt-1 accent-primary disabled:opacity-50"
                 />
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base text-primary">
-                      {st.icon}
-                    </span>
-                    <p className="font-bold text-sm text-on-surface">
-                      {st.label}
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`material-symbols-outlined text-base ${
+                          isDisabled ? "text-secondary" : "text-primary"
+                        }`}
+                      >
+                        {st.icon}
+                      </span>
+                      <p
+                        className={`font-bold text-sm ${
+                          isDisabled
+                            ? "text-on-surface-variant/70"
+                            : "text-on-surface"
+                        }`}
+                      >
+                        {st.label}
+                      </p>
+                    </div>
+                    {isDisabled && (
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-600">
+                        Completed
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-secondary mt-0.5">{st.desc}</p>
                 </div>

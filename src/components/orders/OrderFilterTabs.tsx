@@ -13,10 +13,13 @@ export const OrderFilterTabs: React.FC<OrderFilterTabsProps> = ({
 }) => {
   const tabs = [
     { id: "All", label: `All Orders (${totalOrdersCount})` },
-    { id: "Pending", label: "Pending" },
-    { id: "In-Progress", label: "In-Progress" },
-    { id: "Ready", label: "Ready" },
-    { id: "Delivered", label: "Delivered" },
+    { id: "pending", label: "Pending" },
+    { id: "pickup_assigned", label: "Pickup Assigned" },
+    { id: "picked_up", label: "Picked Up" },
+    { id: "processing", label: "Processing" },
+    { id: "delivery_assigned", label: "Delivery Assigned" },
+    { id: "out_for_delivery", label: "Out for Delivery" },
+    { id: "delivered", label: "Delivered" },
   ];
 
   return (

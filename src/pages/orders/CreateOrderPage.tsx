@@ -167,7 +167,7 @@ export const CreateOrderPage: React.FC = () => {
         deliveryDate: `${logistics.deliveryDate}, ${logistics.deliveryTimeSlot}`,
         driver: null,
         paymentStatus: "Unpaid",
-        status: "Pending",
+        status: "pending",
         serviceType: primaryService,
         totalAmount,
         items: items.map((it) => ({

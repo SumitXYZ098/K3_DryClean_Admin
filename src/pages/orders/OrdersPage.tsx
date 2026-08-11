@@ -1,7 +1,9 @@
 import type React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
-import useOrderStore, {
+import dayjs from "dayjs";
+import useOrders from "../../hooks/useOrders";
+import {
   type Order,
   type OrderStatus,
   type PaymentStatus,
@@ -31,28 +33,31 @@ export const OrdersPage: React.FC = () => {
 
   const {
     orders,
+    isLoading,
     fleetActivities,
     addOrder,
     updateOrderStatus,
     updateOrderPaymentStatus,
     assignDriver,
     deleteOrder,
-  } = useOrderStore();
+  } = useOrders();
 
   // Filters State
   const [activeTab, setActiveTab] = useState("All");
   const [serviceTypeFilter, setServiceTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [dateRange, setDateRange] = useState("Oct 20 - Oct 27, 2023");
+  const [dateRange, setDateRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Modal States
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(
-    null
+    null,
   );
   const [statusModalOrder, setStatusModalOrder] = useState<Order | null>(null);
-  const [assignDriverOrder, setAssignDriverOrder] = useState<Order | null>(null);
+  const [assignDriverOrder, setAssignDriverOrder] = useState<Order | null>(
+    null,
+  );
 
   // Sync custom header button with Create New Order page
   useEffect(() => {
@@ -71,8 +76,6 @@ export const OrdersPage: React.FC = () => {
     setCurrentPage(1);
     if (tabId === "All") {
       setStatusFilter("All");
-    } else if (tabId === "In-Progress") {
-      setStatusFilter("Processing");
     } else {
       setStatusFilter(tabId);
     }
@@ -85,21 +88,25 @@ export const OrdersPage: React.FC = () => {
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesId = order.id.toLowerCase().includes(query);
-        const matchesCustomer = order.customerName.toLowerCase().includes(query);
+        const matchesCustomer = order.customerName
+          .toLowerCase()
+          .includes(query);
         const matchesStatus = order.status.toLowerCase().includes(query);
         const matchesDriver = order.driver?.name.toLowerCase().includes(query);
-        if (!matchesId && !matchesCustomer && !matchesStatus && !matchesDriver) {
+        if (
+          !matchesId &&
+          !matchesCustomer &&
+          !matchesStatus &&
+          !matchesDriver
+        ) {
           return false;
         }
       }
 
       // Tab Filter
-      if (activeTab === "Pending" && order.status !== "Pending") return false;
-      if (activeTab === "In-Progress" && order.status !== "Processing")
+      if (activeTab !== "All" && order.status !== activeTab) {
         return false;
-      if (activeTab === "Ready" && order.status !== "Ready") return false;
-      if (activeTab === "Delivered" && order.status !== "Delivered")
-        return false;
+      }
 
       // Dropdown Status Filter
       if (statusFilter !== "All" && order.status !== statusFilter) {
@@ -114,13 +121,49 @@ export const OrdersPage: React.FC = () => {
         return false;
       }
 
+      // Date Filter matching
+      if (dateRange) {
+        const selectedDate = dayjs(dateRange).format("YYYY-MM-DD");
+
+        const createdDate = dayjs(order.createdAt).isValid()
+          ? dayjs(order.createdAt).format("YYYY-MM-DD")
+          : "";
+        const pickupDate = dayjs(order.pickupDate).isValid()
+          ? dayjs(order.pickupDate).format("YYYY-MM-DD")
+          : "";
+        const deliveryDate = dayjs(order.deliveryDate).isValid()
+          ? dayjs(order.deliveryDate).format("YYYY-MM-DD")
+          : "";
+
+        const matchesDate =
+          createdDate === selectedDate ||
+          pickupDate === selectedDate ||
+          deliveryDate === selectedDate ||
+          order.pickupDate.includes(dateRange) ||
+          order.deliveryDate.includes(dateRange);
+
+        if (!matchesDate) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [orders, searchQuery, activeTab, statusFilter, serviceTypeFilter]);
+  }, [
+    orders,
+    searchQuery,
+    activeTab,
+    statusFilter,
+    serviceTypeFilter,
+    dateRange,
+  ]);
 
   // Pagination calculation
   const itemsPerPage = 10;
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredOrders.length / itemsPerPage),
+  );
   const paginatedOrders = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredOrders.slice(start, start + itemsPerPage);
@@ -139,6 +182,7 @@ export const OrdersPage: React.FC = () => {
     setActiveTab("All");
     setServiceTypeFilter("All");
     setStatusFilter("All");
+    setDateRange("");
     setSearchQuery("");
     setCurrentPage(1);
     showSnackbar({
@@ -160,7 +204,7 @@ export const OrdersPage: React.FC = () => {
               o.pickupDate
             }","${o.deliveryDate}","${o.driver?.name || "Unassigned"}","${
               o.paymentStatus
-            }","${o.status}",${o.totalAmount}`
+            }","${o.status}",${o.totalAmount}`,
         )
         .join("\n");
 
@@ -179,9 +223,7 @@ export const OrdersPage: React.FC = () => {
     }, 800);
   };
 
-  const handleCreateOrder = (
-    newOrderData: Omit<Order, "id" | "createdAt">
-  ) => {
+  const handleCreateOrder = (newOrderData: Omit<Order, "id" | "createdAt">) => {
     const created = addOrder(newOrderData);
     showSnackbar({
       message: `Order ${created.id} created for ${created.customerName}`,
@@ -209,7 +251,10 @@ export const OrdersPage: React.FC = () => {
     });
 
     if (selectedOrderDetail && selectedOrderDetail.id === id) {
-      setSelectedOrderDetail({ ...selectedOrderDetail, paymentStatus: payment });
+      setSelectedOrderDetail({
+        ...selectedOrderDetail,
+        paymentStatus: payment,
+      });
     }
   };
 
@@ -275,11 +320,10 @@ export const OrdersPage: React.FC = () => {
       {/* Dashboard Style Metric Bento Cards */}
       <OrderStatsBento
         orders={orders}
+        isLoading={isLoading}
         onStatClick={(status) => {
           setStatusFilter(status);
-          setActiveTab(
-            status === "Processing" ? "In-Progress" : status
-          );
+          setActiveTab(status);
         }}
       />
 
@@ -307,6 +351,7 @@ export const OrdersPage: React.FC = () => {
         {/* Data Table Component */}
         <OrderTable
           orders={paginatedOrders}
+          isLoading={isLoading}
           totalOrdersCount={filteredOrders.length}
           currentPage={currentPage}
           totalPages={totalPages}
@@ -333,7 +378,8 @@ export const OrdersPage: React.FC = () => {
         <ServiceEfficiencyCard
           onOpenReport={() => {
             showSnackbar({
-              message: "Opening Full Operations & Efficiency Analytics Report...",
+              message:
+                "Opening Full Operations & Efficiency Analytics Report...",
               type: "info",
             });
           }}
@@ -346,7 +392,8 @@ export const OrdersPage: React.FC = () => {
           type="button"
           onClick={() =>
             showSnackbar({
-              message: "Need assistance? Contact K3 DryClean Operations Support at ext 402.",
+              message:
+                "Need assistance? Contact K3 DryClean Operations Support at ext 402.",
               type: "info",
             })
           }

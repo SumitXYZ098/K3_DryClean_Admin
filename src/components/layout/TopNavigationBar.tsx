@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useLocation } from "react-router";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import useHeaderStore from "../../store/useHeaderStore";
+import useNotification from "../../hooks/useNotification";
+import NotificationDrawer from "../notifications/NotificationDrawer";
 
 export interface TopNavigationBarProps {
   onNewOrderClick?: () => void;
@@ -79,6 +81,18 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
     triggerCustomAction,
   } = useHeaderStore();
 
+  const {
+    notifications,
+    unreadCount,
+    isDrawerOpen,
+    socketConnected,
+    toggleDrawer,
+    setDrawerOpen,
+    handleNotificationClick,
+    markAllAsRead,
+    clearNotifications,
+  } = useNotification();
+
   const [isDarkMode, setIsDarkMode] = useState(() =>
     typeof document !== "undefined"
       ? document.documentElement.classList.contains("dark")
@@ -148,20 +162,30 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
       <div className="flex items-center gap-md">
         <button
           type="button"
-          onClick={() =>
-            showSnackbar({
-              message: "You have 3 unread system notifications",
-              type: "info",
-            })
-          }
+          onClick={toggleDrawer}
           className="p-2 text-secondary hover:bg-secondary-container/50 rounded-full transition-colors relative cursor-pointer"
           title="Notifications"
         >
           <span className="material-symbols-outlined" data-icon="notifications">
             notifications
           </span>
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-surface" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 min-w-4 h-4 px-1 bg-primary text-on-primary rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-surface">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
+
+        <NotificationDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          socketConnected={socketConnected}
+          onNotificationClick={handleNotificationClick}
+          onMarkAllAsRead={markAllAsRead}
+          onClearAll={clearNotifications}
+        />
 
         <button
           type="button"

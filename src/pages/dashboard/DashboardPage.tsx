@@ -1,4 +1,5 @@
 import type React from "react";
+import dayjs from "dayjs";
 import KpiCard from "../../components/dashboard/KpiCard";
 import RevenueChart from "../../components/dashboard/RevenueChart";
 import OrderStatusChart from "../../components/dashboard/OrderStatusChart";
@@ -9,12 +10,7 @@ import useSnackbarStore from "../../store/useSnackbarStore";
 export const DashboardPage: React.FC = () => {
   const { showSnackbar } = useSnackbarStore();
 
-  const formattedDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const formattedDate = dayjs().format("dddd, MMM D, YYYY");
 
   return (
     <div className="space-y-xl pb-lg">

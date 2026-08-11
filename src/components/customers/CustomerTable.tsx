@@ -38,22 +38,22 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         <table className="w-full text-left border-collapse min-w-190">
           <thead className="bg-surface-container-low border-b border-outline-variant">
             <tr>
-              <th className="px-lg py-4 font-label-sm uppercase text-secondary tracking-wider">
+              <th className="px-lg py-4 capitalize text-secondary text-base whitespace-nowrap">
                 Customer
               </th>
-              <th className="px-lg py-4 font-label-sm uppercase text-secondary tracking-wider">
+              <th className="px-lg py-4 capitalize text-secondary text-base whitespace-nowrap">
                 Contact Details
               </th>
-              <th className="px-lg py-4 font-label-sm uppercase text-secondary tracking-wider">
+              <th className="px-lg py-4 capitalize text-secondary text-base whitespace-nowrap">
                 Total Orders
               </th>
-              <th className="px-lg py-4 font-label-sm uppercase text-secondary tracking-wider text-right">
-                Wallet Balance
+              <th className="px-lg py-4 capitalize text-secondary text-base whitespace-nowrap">
+                Total Spend
               </th>
-              <th className="px-lg py-4 font-label-sm uppercase text-secondary tracking-wider">
+              <th className="px-lg py-4 capitalize text-secondary text-base whitespace-nowrap">
                 Status
               </th>
-              <th className="px-lg py-4 font-label-sm uppercase text-secondary tracking-wider">
+              <th className="px-lg py-4 capitalize text-secondary text-base whitespace-nowrap">
                 Last Order
               </th>
               <th className="px-lg py-4 text-center"></th>

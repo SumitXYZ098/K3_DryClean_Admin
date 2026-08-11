@@ -1,6 +1,12 @@
 import type React from "react";
 import { useState } from "react";
-import type { Order, ServiceType, PaymentStatus, OrderStatus, DriverInfo } from "../../store/useOrderStore";
+import type {
+  Order,
+  ServiceType,
+  PaymentStatus,
+  OrderStatus,
+  DriverInfo,
+} from "../../store/useOrderStore";
 import useOrderStore from "../../store/useOrderStore";
 
 export interface CreateOrderModalProps {
@@ -17,7 +23,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   const { availableDrivers } = useOrderStore();
 
   const [customerName, setCustomerName] = useState("");
-  const [customerTier, setCustomerTier] = useState<Order["customerTier"]>("Premium Membership");
+  const [customerTier, setCustomerTier] =
+    useState<Order["customerTier"]>("Premium Membership");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [serviceType, setServiceType] = useState<ServiceType>("Dry Clean Only");
@@ -25,7 +32,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   const [deliveryDate, setDeliveryDate] = useState("Oct 28, 05:00 PM");
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("Paid");
-  const [status, setStatus] = useState<OrderStatus>("Pending");
+  const [status, setStatus] = useState<OrderStatus>("pending");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
 
@@ -60,7 +67,10 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const totalAmount = items.reduce((acc, curr) => acc + curr.price * curr.quantity, 0);
+  const totalAmount = items.reduce(
+    (acc, curr) => acc + curr.price * curr.quantity,
+    0,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,9 +190,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               </label>
               <select
                 value={serviceType}
-                onChange={(e) =>
-                  setServiceType(e.target.value as ServiceType)
-                }
+                onChange={(e) => setServiceType(e.target.value as ServiceType)}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="Dry Clean Only">Dry Clean Only</option>
@@ -247,7 +255,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               </label>
               <select
                 value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)}
+                onChange={(e) =>
+                  setPaymentStatus(e.target.value as PaymentStatus)
+                }
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="Paid">Paid</option>
@@ -265,10 +275,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 onChange={(e) => setStatus(e.target.value as OrderStatus)}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
-                <option value="Ready">Ready</option>
-                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="pending">Pending</option>
+                <option value="pickup_assigned">Pickup Assigned</option>
+                <option value="picked_up">Picked Up</option>
+                <option value="processing">Processing</option>
+                <option value="delivery_assigned">Delivery Assigned</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
               </select>
             </div>
           </div>
@@ -342,7 +355,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             )}
 
             <div className="mt-3 text-right font-bold text-sm text-on-surface">
-              Total Amount: <span className="text-primary">${totalAmount.toFixed(2)}</span>
+              Total Amount:{" "}
+              <span className="text-primary">${totalAmount.toFixed(2)}</span>
             </div>
           </div>
 

@@ -45,40 +45,46 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
   // Render order status badge
   const renderStatusBadge = (status: Order["status"]) => {
     switch (status) {
-      case "Processing":
+      case "pending":
         return (
-          <span className="px-2.5 py-1 rounded-full bg-blue-100  text-blue-700 text-xs font-bold">
-            Processing
-          </span>
-        );
-      case "Pending":
-        return (
-          <span className="px-2.5 py-1 rounded-full bg-yellow-100  text-yellow-700 text-xs font-bold">
+          <span className="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">
             Pending
           </span>
         );
-      case "Ready":
+      case "pickup_assigned":
         return (
-          <span className="px-2.5 py-1 rounded-full bg-green-100  text-green-700 text-xs font-bold">
-            Ready
+          <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold whitespace-nowrap">
+            Pickup Assigned
           </span>
         );
-      case "Out for Delivery":
+      case "picked_up":
+        return (
+          <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold whitespace-nowrap">
+            Picked Up
+          </span>
+        );
+      case "processing":
+        return (
+          <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
+            Processing
+          </span>
+        );
+      case "delivery_assigned":
+        return (
+          <span className="px-2.5 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-bold whitespace-nowrap">
+            Delivery Assigned
+          </span>
+        );
+      case "out_for_delivery":
         return (
           <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold whitespace-nowrap">
             Out for Delivery
           </span>
         );
-      case "Delivered":
+      case "delivered":
         return (
-          <span className="px-2.5 py-1 rounded-full bg-emerald-100  text-emerald-700 text-xs font-bold">
+          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
             Delivered
-          </span>
-        );
-      case "Issues":
-        return (
-          <span className="px-2.5 py-1 rounded-full bg-red-100  text-red-700 text-xs font-bold">
-            Issues
           </span>
         );
       default:
@@ -87,13 +93,13 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
   };
 
   return (
-    <tr className="hover:bg-primary-container/5 transition-colors group">
+    <tr className="hover:bg-primary-container/5 transition-colors group capitalize">
       {/* Order ID */}
       <td
         className="px-lg py-4 font-bold text-primary cursor-pointer hover:underline"
         onClick={() => onViewDetails(order)}
       >
-        {order.id}
+        <span className="text-xs">{order.id}</span>
       </td>
 
       {/* Customer Info */}
@@ -102,9 +108,9 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
           <span className="font-title-md text-sm text-on-surface">
             {order.customerName}
           </span>
-          <span className="text-xs text-on-surface-variant">
+          {/* <span className="text-xs text-on-surface-variant">
             {order.customerTier}
-          </span>
+          </span> */}
         </div>
       </td>
 

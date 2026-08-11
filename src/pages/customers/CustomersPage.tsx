@@ -10,9 +10,6 @@ import type { Customer } from "../../store/useCustomerStore";
 export type { Customer };
 import CustomerFilterBar from "../../components/customers/CustomerFilterBar";
 import CustomerTable from "../../components/customers/CustomerTable";
-import AddCustomerModal, {
-  type AddCustomerFormInputs,
-} from "../../components/customers/AddCustomerModal";
 import CustomerDetailModal from "../../components/customers/CustomerDetailModal";
 
 export const CustomersPage: React.FC = () => {
@@ -22,13 +19,8 @@ export const CustomersPage: React.FC = () => {
   const { searchQuery, setSearchQuery, setCustomActionHandler } =
     useHeaderStore();
 
-  const {
-    customers,
-    fetchCustomers,
-    addCustomer,
-    toggleCustomerStatus,
-    deleteCustomer,
-  } = useCustomerHook();
+  const { customers, fetchCustomers, toggleCustomerStatus, deleteCustomer } =
+    useCustomerHook();
 
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [spendFilter, setSpendFilter] = useState("All");
@@ -36,8 +28,6 @@ export const CustomersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
-  // Modals state
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] =
     useState<Customer | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,12 +68,12 @@ export const CustomersPage: React.FC = () => {
 
       // Spend filter
       if (spendFilter === "High Value") {
-        if (customer.walletBalance <= 500) return false;
+        if (customer.totalSpend <= 500) return false;
       } else if (spendFilter === "Mid Range") {
-        if (customer.walletBalance < 100 || customer.walletBalance > 500)
+        if (customer.totalSpend < 100 || customer.totalSpend > 500)
           return false;
       } else if (spendFilter === "New Customers") {
-        if (customer.walletBalance >= 100) return false;
+        if (customer.totalSpend >= 100) return false;
       }
 
       // Status filter
@@ -143,7 +133,7 @@ export const CustomersPage: React.FC = () => {
       const rows = filteredCustomers
         .map(
           (c) =>
-            `"${c.id}","${c.name}","${c.email}","${c.phone}",${c.totalOrders},${c.walletBalance},"${c.status}","${c.lastOrder}"`,
+            `"${c.id}","${c.name}","${c.email}","${c.phone}",${c.totalOrders},${c.totalSpend},"${c.status}","${c.lastOrder}"`,
         )
         .join("\n");
 
@@ -160,22 +150,6 @@ export const CustomersPage: React.FC = () => {
         type: "success",
       });
     }, 800);
-  };
-
-  const handleAddCustomer = (formData: AddCustomerFormInputs) => {
-    const newCustomer = addCustomer({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      walletBalance: parseFloat(formData.walletBalance) || 0,
-    });
-
-    setIsAddModalOpen(false);
-
-    showSnackbar({
-      message: `Customer ${newCustomer.name} added successfully!`,
-      type: "success",
-    });
   };
 
   const handleToggleStatus = (customer: Customer) => {
@@ -248,13 +222,6 @@ export const CustomersPage: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-      />
-
-      {/* Add Customer Modal Component */}
-      <AddCustomerModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddCustomer}
       />
 
       {/* Customer Detail View Modal Component */}

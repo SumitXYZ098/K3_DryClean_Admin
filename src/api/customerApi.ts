@@ -121,6 +121,8 @@ export interface CustomerProfileData {
   publishedAt?: string;
   locale?: string | null;
   customerId?: string;
+  totalOrders?: number;
+  totalSpend?: number;
   users_permissions_user?: UsersPermissionsUser;
   profileImage?: ProfileImage | null;
   customer_addresses?: CustomerAddress[];
@@ -145,11 +147,11 @@ export const customerApi = {
    * Create customer manually
    */
   createCustomer: async (
-    payload: CreateCustomerPayload
+    payload: CreateCustomerPayload,
   ): Promise<CreateCustomerResponse> => {
     return await api.post<CreateCustomerResponse>(
       ENDPOINTS.createCustomer,
-      payload
+      payload,
     );
   },
 

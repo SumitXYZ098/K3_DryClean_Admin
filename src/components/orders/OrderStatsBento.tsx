@@ -3,6 +3,7 @@ import type { Order } from "../../store/useOrderStore";
 
 interface OrderStatsBentoProps {
   orders: Order[];
+  isLoading?: boolean;
   onStatClick?: (status: string) => void;
 }
 
@@ -10,8 +11,6 @@ interface StatConfig {
   id: string;
   label: string;
   count: number;
-  change: string;
-  changeType: "positive" | "neutral" | "negative";
   icon: string;
   iconBg: string;
   iconColor: string;
@@ -21,67 +20,84 @@ interface StatConfig {
 
 export const OrderStatsBento: React.FC<OrderStatsBentoProps> = ({
   orders,
+  isLoading = false,
   onStatClick,
 }) => {
-  const pendingCount = orders.filter((o) => o.status === "Pending").length;
+  const pendingCount = orders.filter((o) => o.status === "pending").length;
   const processingCount = orders.filter(
-    (o) => o.status === "Processing",
+    (o) => o.status === "processing",
   ).length;
-  const readyCount = orders.filter((o) => o.status === "Ready").length;
+  const readyCount = orders.filter(
+    (o) => o.status === "delivery_assigned",
+  ).length;
   const outForDeliveryCount = orders.filter(
-    (o) => o.status === "Out for Delivery",
+    (o) => o.status === "out_for_delivery",
   ).length;
+
+  const totalOrders = orders.length || 1;
 
   const stats: StatConfig[] = [
     {
-      id: "Pending",
+      id: "pending",
       label: "Pending Orders",
-      count: pendingCount || 24,
-      change: "+12%",
-      changeType: "positive",
+      count: pendingCount,
       icon: "pending_actions",
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-700",
       barColor: "bg-yellow-500",
-      barWidth: "w-[65%]",
+      barWidth: `${Math.min(100, Math.round((pendingCount / totalOrders) * 100))}%`,
     },
     {
-      id: "Processing",
+      id: "processing",
       label: "Processing",
-      count: processingCount || 41,
-      change: "+4%",
-      changeType: "positive",
+      count: processingCount,
       icon: "sync",
       iconBg: "bg-blue-100 ",
       iconColor: "text-blue-700",
       barColor: "bg-blue-500",
-      barWidth: "w-[80%]",
+      barWidth: `${Math.min(100, Math.round((processingCount / totalOrders) * 100))}%`,
     },
     {
-      id: "Ready",
-      label: "Ready for Pickup",
-      count: readyCount || 18,
-      change: "-2%",
-      changeType: "neutral",
+      id: "delivery_assigned",
+      label: "Delivery Assigned",
+      count: readyCount,
       icon: "check_circle",
-      iconBg: "bg-green-100",
-      iconColor: "text-green-700",
-      barColor: "bg-green-500",
-      barWidth: "w-[45%]",
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-700",
+      barColor: "bg-teal-500",
+      barWidth: `${Math.min(100, Math.round((readyCount / totalOrders) * 100))}%`,
     },
     {
-      id: "Out for Delivery",
+      id: "out_for_delivery",
       label: "Out for Delivery",
-      count: outForDeliveryCount || 9,
-      change: "+18%",
-      changeType: "positive",
+      count: outForDeliveryCount,
       icon: "local_shipping",
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
       barColor: "bg-primary",
-      barWidth: "w-[30%]",
+      barWidth: `${Math.min(100, Math.round((outForDeliveryCount / totalOrders) * 100))}%`,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div
+            key={`stat-skeleton-${idx}`}
+            className="bg-surface-container-low p-md rounded-xl border border-outline-variant animate-pulse"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-10 h-10 rounded-lg bg-outline-variant/40"></div>
+            </div>
+            <div className="h-3 w-28 bg-outline-variant/40 rounded-md mb-2"></div>
+            <div className="h-7 w-16 bg-outline-variant/40 rounded-md"></div>
+            <div className="mt-4 h-1 w-full bg-outline-variant/20 rounded-full"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
@@ -97,17 +113,6 @@ export const OrderStatsBento: React.FC<OrderStatsBentoProps> = ({
                 {stat.icon}
               </span>
             </span>
-            <span
-              className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                stat.changeType === "positive"
-                  ? "text-green-600 bg-green-50"
-                  : stat.changeType === "neutral"
-                    ? "text-yellow-600 bg-yellow-50"
-                    : "text-red-600 bg-red-50"
-              }`}
-            >
-              {stat.change}
-            </span>
           </div>
           <p className="text-label-sm text-on-surface-variant uppercase font-bold tracking-wider">
             {stat.label}
@@ -116,7 +121,10 @@ export const OrderStatsBento: React.FC<OrderStatsBentoProps> = ({
             {stat.count < 10 ? `0${stat.count}` : stat.count}
           </h3>
           <div className="mt-4 h-1 w-full bg-outline-variant/30 rounded-full overflow-hidden">
-            <div className={`h-full ${stat.barColor} ${stat.barWidth}`} />
+            <div
+              className={`h-full ${stat.barColor}`}
+              style={{ width: stat.barWidth }}
+            />
           </div>
         </div>
       ))}

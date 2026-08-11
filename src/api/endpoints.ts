@@ -11,4 +11,11 @@ export const ENDPOINTS = {
   // customer endpoints
   createCustomer: `${BASE_URL}/api/create-user-manually`,
   getCustomer: `${BASE_URL}/api/user-profiles`,
+
+  // order endpoints
+  getStats: `${BASE_URL}/api/admin/order-stats`,
+  getAllOrder: `${BASE_URL}/api/orders`,
+
+  // notification endpoints
+  getAllNotification: `${BASE_URL}/api/notifications`,
 };

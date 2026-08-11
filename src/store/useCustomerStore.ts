@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import dayjs from "dayjs";
 import { create } from "zustand";
 import customerApi, {
   type CustomerProfileData,
@@ -14,7 +15,7 @@ export interface Customer {
   email: string;
   phone: string;
   totalOrders: number;
-  walletBalance: number;
+  totalSpend: number;
   status: "Active" | "Suspended";
   lastOrder: string;
   avatarUrl?: string;
@@ -33,11 +34,11 @@ export interface Customer {
   specialInstructions?: string;
   preferredPaymentMethod?: "credit" | "cash" | "terms" | "digital";
   customer_addresses?: CustomerAddress[];
-  rawProfile?: CustomerProfileData;
+  // rawProfile?: CustomerProfileData;
 }
 
 export const mapCustomerProfileToCustomer = (
-  profile: CustomerProfileData
+  profile: CustomerProfileData,
 ): Customer => {
   const initials =
     (profile.fullName || profile.email || "CU")
@@ -61,11 +62,7 @@ export const mapCustomerProfileToCustomer = (
   }
 
   const formattedDate = profile.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+    ? dayjs(profile.createdAt).format("MMM D, YYYY")
     : "Just now";
 
   // Ensure id format starts with #K3- or retains provided customerId
@@ -81,23 +78,25 @@ export const mapCustomerProfileToCustomer = (
     name: profile.fullName || "Unnamed Customer",
     email: profile.email,
     phone: profile.phoneNumber,
-    totalOrders: 0,
-    walletBalance: 0,
+    totalOrders: profile.totalOrders ?? 0,
+    totalSpend: profile.totalSpend ?? 0,
     status:
-      profile.accountStatus === "suspended" || profile.accountStatus === "Suspended"
+      profile.accountStatus === "suspended" ||
+      profile.accountStatus === "Suspended"
         ? "Suspended"
         : "Active",
     lastOrder: formattedDate,
     avatarUrl,
     initials,
     initialsBg: "bg-primary-fixed text-primary font-bold",
-    addressType: (defaultAddr?.addressType as "home" | "work" | "other") || "home",
+    addressType:
+      (defaultAddr?.addressType as "home" | "work" | "other") || "home",
     streetAddress: defaultAddr?.streetAddress || "",
     city: defaultAddr?.city || "",
     state: defaultAddr?.state || "",
     zipCode: defaultAddr?.postalCode || "",
     customer_addresses: profile.customer_addresses || [],
-    rawProfile: profile,
+    // rawProfile: profile,
   };
 };
 
@@ -150,12 +149,16 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await customerApi.getCustomer();
-      const mappedCustomers = (response.data || []).map(mapCustomerProfileToCustomer);
+      const mappedCustomers = (response.data || []).map(
+        mapCustomerProfileToCustomer,
+      );
       set({ customers: mappedCustomers, hasFetched: true, isLoading: false });
       return mappedCustomers;
     } catch (err: any) {
       const errMsg =
-        err.response?.data?.message || err.message || "Failed to fetch customers";
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch customers";
       set({ error: errMsg, isLoading: false });
       throw err;
     }
@@ -174,7 +177,9 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
       return newCustomer;
     } catch (err: any) {
       const errMsg =
-        err.response?.data?.message || err.message || "Failed to create customer";
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to create customer";
       set({ error: errMsg, isLoading: false });
       throw err;
     }
@@ -197,7 +202,7 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
       email: data.email,
       phone: data.phone,
       totalOrders: 0,
-      walletBalance: data.walletBalance ?? 0,
+      totalSpend: 0,
       status: "Active",
       lastOrder: "Just now",
       initials,
@@ -224,7 +229,7 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
       customers: state.customers.map((c) =>
         c.id === id
           ? { ...c, status: c.status === "Active" ? "Suspended" : "Active" }
-          : c
+          : c,
       ),
     })),
 

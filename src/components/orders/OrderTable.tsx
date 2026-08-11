@@ -5,6 +5,7 @@ import OrderPagination from "./OrderPagination";
 
 export interface OrderTableProps {
   orders: Order[];
+  isLoading?: boolean;
   totalOrdersCount: number;
   currentPage: number;
   totalPages: number;
@@ -17,6 +18,7 @@ export interface OrderTableProps {
 
 export const OrderTable: React.FC<OrderTableProps> = ({
   orders,
+  isLoading = false,
   totalOrdersCount,
   currentPage,
   totalPages,
@@ -36,22 +38,22 @@ export const OrderTable: React.FC<OrderTableProps> = ({
               <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
                 Order #
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
+              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Customer Name
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
+              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Pickup Date
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
+              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Delivery Date
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
+              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Driver
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
+              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Payment
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold">
+              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Status
               </th>
               <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-right">
@@ -60,7 +62,36 @@ export const OrderTable: React.FC<OrderTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant">
-            {orders.length > 0 ? (
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <tr key={`skeleton-row-${index}`} className="animate-pulse">
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-20 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-32 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-24 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-24 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-28 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-16 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-6 w-24 bg-outline-variant/40 rounded-full"></div>
+                  </td>
+                  <td className="px-lg py-4 text-right">
+                    <div className="h-8 w-8 bg-outline-variant/40 rounded-lg ml-auto"></div>
+                  </td>
+                </tr>
+              ))
+            ) : orders.length > 0 ? (
               orders.map((order) => (
                 <OrderTableRow
                   key={order.id}

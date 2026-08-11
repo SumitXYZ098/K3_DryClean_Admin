@@ -48,10 +48,10 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
             </div>
           )}
           <div>
-            <p className="font-title-md text-on-surface">{customer.name}</p>
-            <p className="text-label-sm text-secondary">
-              Customer ID: {customer.id}
+            <p className="font-title-md text-on-surface capitalize">
+              {customer.name}
             </p>
+            <p className="text-label-sm text-primary">ID : {customer.id}</p>
           </div>
         </div>
       </td>
@@ -86,15 +86,15 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
       </td>
 
       {/* Wallet Balance */}
-      <td className="px-lg py-md text-right">
+      <td className="px-lg py-md">
         <span
           className={`font-title-md ${
-            customer.walletBalance < 0 ? "text-error" : "text-on-surface"
+            customer.totalSpend < 0 ? "text-error" : "text-on-surface"
           }`}
         >
-          {customer.walletBalance < 0
-            ? `-₹${Math.abs(customer.walletBalance).toFixed(2)}`
-            : `₹${customer.walletBalance.toFixed(2)}`}
+          {customer.totalSpend < 0
+            ? `-₹${Math.abs(customer.totalSpend).toFixed(2)}`
+            : `₹${customer.totalSpend.toFixed(2)}`}
         </span>
       </td>
 
@@ -139,11 +139,14 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
         {isMenuOpen && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-6 top-12 w-48 bg-surface-container-lowest border border-outline-variant shadow-xl rounded-md py-2 z-9999 animate-fade-in text-left"
+            className="absolute right-6 top-12 w-48 bg-surface-container-lowest border border-outline-variant shadow-xl rounded-md py-2 z-50 animate-fade-in text-left"
           >
             <button
               type="button"
-              onClick={() => onViewDetails(customer)}
+              onClick={() => {
+                onToggleMenu(null);
+                onViewDetails(customer);
+              }}
               className="w-full px-md py-2 text-body-md text-on-surface hover:bg-surface-container flex items-center gap-xs cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">
@@ -154,7 +157,10 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
 
             <button
               type="button"
-              onClick={() => onToggleStatus(customer)}
+              onClick={() => {
+                onToggleMenu(null);
+                onToggleStatus(customer);
+              }}
               className="w-full px-md py-2 text-body-md text-on-surface hover:bg-surface-container flex items-center gap-xs cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">
@@ -169,7 +175,10 @@ export const CustomerTableRow: React.FC<CustomerTableRowProps> = ({
 
             <button
               type="button"
-              onClick={() => onDelete(customer)}
+              onClick={() => {
+                onToggleMenu(null);
+                onDelete(customer);
+              }}
               className="w-full px-md py-2 text-body-md text-error hover:bg-error-container/20 flex items-center gap-xs cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">
