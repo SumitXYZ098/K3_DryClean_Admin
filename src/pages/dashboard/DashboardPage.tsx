@@ -6,11 +6,26 @@ import OrderStatusChart from "../../components/dashboard/OrderStatusChart";
 import LatestOrdersTable from "../../components/dashboard/LatestOrdersTable";
 import DriverActivityList from "../../components/dashboard/DriverActivityList";
 import useSnackbarStore from "../../store/useSnackbarStore";
+import { useEffect } from "react";
+import useHeaderStore from "../../store/useHeaderStore";
+import { useNavigate } from "react-router";
 
 export const DashboardPage: React.FC = () => {
   const { showSnackbar } = useSnackbarStore();
+  const { setCustomActionHandler } = useHeaderStore();
+  const navigate = useNavigate();
 
   const formattedDate = dayjs().format("dddd, MMM D, YYYY");
+
+  useEffect(() => {
+    setCustomActionHandler(() => {
+      navigate("/orders/create");
+    });
+
+    return () => {
+      setCustomActionHandler(null);
+    };
+  }, [setCustomActionHandler, navigate]);
 
   return (
     <div className="space-y-xl pb-lg">

@@ -152,38 +152,66 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </div>
 
           {/* Delivery & Driver Card */}
-          <div className="bg-surface-container-lowest p-md rounded-lg border border-outline-variant">
-            <p className="text-label-sm uppercase font-bold text-on-surface-variant mb-2">
+          <div className="bg-surface-container-lowest p-md rounded-lg border border-outline-variant space-y-2">
+            <p className="text-label-sm uppercase font-bold text-on-surface-variant">
               Driver & Schedule
             </p>
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-secondary">Assigned Driver:</span>
-              {order.driver ? (
+
+            {/* Pickup Driver */}
+            <div className="flex items-center justify-between text-xs border-b border-outline-variant/60 pb-1.5">
+              <span className="text-secondary font-medium">Pickup Driver:</span>
+              {order.pickupPerson ? (
                 <span className="font-bold text-on-surface">
-                  {order.driver.name} ({order.driver.initials})
+                  {order.pickupPerson.name} ({order.pickupPerson.initials})
                 </span>
-              ) : (
+              ) : order.status === "pending" ? (
                 <button
                   type="button"
                   onClick={() => onAssignDriverClick(order)}
-                  className="text-primary text-xs font-bold hover:underline"
+                  className="text-primary text-xs font-bold hover:underline cursor-pointer"
                 >
-                  + Assign Driver
+                  + Assign Pickup Driver
                 </button>
+              ) : (
+                <span className="text-secondary italic">Unassigned</span>
               )}
             </div>
-            <p className="text-xs text-secondary mt-1">
-              Pickup:{" "}
-              <span className="text-on-surface font-medium">
-                {order.pickupDate}
-              </span>
-            </p>
-            <p className="text-xs text-secondary">
-              Delivery:{" "}
-              <span className="text-on-surface font-medium">
-                {order.deliveryDate}
-              </span>
-            </p>
+
+            {/* Delivery Driver */}
+            <div className="flex items-center justify-between text-xs border-b border-outline-variant/60 pb-1.5">
+              <span className="text-secondary font-medium">Delivery Driver:</span>
+              {order.deliveryPerson ? (
+                <span className="font-bold text-on-surface">
+                  {order.deliveryPerson.name} ({order.deliveryPerson.initials})
+                </span>
+              ) : order.status === "processing" ? (
+                <button
+                  type="button"
+                  onClick={() => onAssignDriverClick(order)}
+                  className="text-primary text-xs font-bold hover:underline cursor-pointer"
+                >
+                  + Assign Delivery Driver
+                </button>
+              ) : (
+                <span className="text-secondary italic">Unassigned</span>
+              )}
+            </div>
+
+            {/* Schedule Dates */}
+            <div className="pt-0.5 space-y-0.5">
+              <p className="text-xs text-secondary flex justify-between">
+                <span>Pickup Schedule:</span>
+                <span className="text-on-surface font-medium">
+                  {order.pickupDate}
+                </span>
+              </p>
+              <p className="text-xs text-secondary flex justify-between">
+                <span>Delivery Schedule:</span>
+                <span className="text-on-surface font-medium">
+                  {order.deliveryDate}
+                </span>
+              </p>
+            </div>
           </div>
         </div>
 

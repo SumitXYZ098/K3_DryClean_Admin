@@ -18,4 +18,19 @@ export const ENDPOINTS = {
 
   // notification endpoints
   getAllNotification: `${BASE_URL}/api/notifications`,
+
+  // driver endpoints
+  getAllDriver: `${BASE_URL}/api/driver-details`,
+  getDriverDetialsById: (docId: string) =>
+    `${BASE_URL}/api/driver-details/${docId}`,
+  getDriverDetailsById: (docId: string) =>
+    `${BASE_URL}/api/driver-details/${docId}`,
+  createDriver: `${BASE_URL}/api/driver-details`,
+  updateDriver: (docId: string) =>
+    `${BASE_URL}/api/driver-details/${docId}`,
+  deleteDriver: (docId: string) =>
+    `${BASE_URL}/api/driver-details/${docId}`,
+
+  // upload endpoints
+  uploadDoc: `${BASE_URL}/api/upload`,
 };

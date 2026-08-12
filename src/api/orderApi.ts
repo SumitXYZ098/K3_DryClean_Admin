@@ -6,8 +6,8 @@ import type {
   OrderStatus,
   PaymentStatus,
   ServiceType,
-  DriverInfo,
   OrderItem,
+  DriverInfo,
 } from "../store/useOrderStore";
 
 export interface ApiOrderItem {
@@ -80,14 +80,28 @@ export const mapApiOrderToOrder = (apiOrder: ApiOrder): Order => {
     apiOrder.deliveryTime,
   );
 
-  const driverName =
-    apiOrder.deliveryPerson?.fullName || apiOrder.pickupPerson?.fullName;
-  const driver: DriverInfo | null = driverName
+  const deliveryDriverName = apiOrder.deliveryPerson?.fullName || "";
+  const deliveryPerson: DriverInfo | null = deliveryDriverName
     ? {
         id: "d1",
-        name: driverName,
+        name: deliveryDriverName,
         initials:
-          driverName
+          deliveryDriverName
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2) || "DR",
+      }
+    : null;
+
+  const pickupDriverName = apiOrder.pickupPerson?.fullName || "";
+  const pickupPerson: DriverInfo | null = pickupDriverName
+    ? {
+        id: "d2",
+        name: pickupDriverName,
+        initials:
+          pickupDriverName
             .split(" ")
             .map((n) => n[0])
             .join("")
@@ -130,7 +144,8 @@ export const mapApiOrderToOrder = (apiOrder: ApiOrder): Order => {
     customerPhone,
     pickupDate,
     deliveryDate,
-    driver,
+    deliveryPerson,
+    pickupPerson,
     paymentStatus,
     status: (apiOrder.orderStatus as OrderStatus) || "pending",
     serviceType,

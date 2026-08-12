@@ -10,6 +10,8 @@ import OrdersPage from "../pages/orders/OrdersPage";
 import CreateOrderPage from "../pages/orders/CreateOrderPage";
 import CustomersPage from "../pages/customers/CustomersPage";
 import AddCustomerPage from "../pages/customers/AddCustomerPage";
+import DriversPage from "../pages/drivers/DriversPage";
+import AddDriverPage from "../pages/drivers/AddDriverPage";
 import PlaceholderPage from "../pages/common/PlaceholderPage";
 import useAuthStore from "../store/useAuthStore";
 
@@ -99,16 +101,9 @@ export const AppRoute = () => {
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/customers/add" element={<AddCustomerPage />} />
         <Route path="/customers/new" element={<AddCustomerPage />} />
-        <Route
-          path="/drivers"
-          element={
-            <PlaceholderPage
-              title="Driver Logistics"
-              icon="local_shipping"
-              description="Track live driver routes, active pickups, and deliveries."
-            />
-          }
-        />
+        <Route path="/drivers" element={<DriversPage />} />
+        <Route path="/drivers/add" element={<AddDriverPage />} />
+        <Route path="/drivers/new" element={<AddDriverPage />} />
         <Route
           path="/staff"
           element={

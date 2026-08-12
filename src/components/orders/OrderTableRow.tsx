@@ -126,22 +126,45 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
 
       {/* Driver Info or Assign Action */}
       <td className="px-lg py-4">
-        {order.driver ? (
-          <div className="flex items-center gap-2">
-            <span className="w-fit h-fit p-2 rounded-full bg-slate-200 text-slate-800 overflow-hidden text-[10px] flex items-center justify-center font-bold">
-              {order.driver.initials}
-            </span>
-            <span className="text-sm text-on-surface whitespace-nowrap">
-              {order.driver.name}
-            </span>
-          </div>
+        {order.status === "pickup_assigned" || order.status === "picked_up" ? (
+          order.pickupPerson && (
+            <div className="flex items-center gap-2 group">
+              <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-800 text-[10px] flex items-center justify-center font-bold">
+                {order.pickupPerson.initials}
+              </span>
+              <span className="text-sm text-on-surface whitespace-nowrap font-medium">
+                {order.pickupPerson.name}
+              </span>
+            </div>
+          )
+        ) : order.status === "processing" ? (
+          <button
+            type="button"
+            onClick={() => onAssignDriver(order)}
+            className="text-primary text-[10px] font-bold border border-primary/20 px-3 py-1 rounded hover:bg-primary hover:text-on-primary transition-all cursor-pointer"
+          >
+            Assign Delivery Driver
+          </button>
+        ) : order.status === "delivery_assigned" ||
+          order.status === "delivered" ||
+          order.status === "out_for_delivery" ? (
+          order.deliveryPerson && (
+            <div className="flex items-center gap-2 group">
+              <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-800 text-[10px] flex items-center justify-center font-bold">
+                {order.deliveryPerson.initials}
+              </span>
+              <span className="text-sm text-on-surface whitespace-nowrap font-medium">
+                {order.deliveryPerson.name}
+              </span>{" "}
+            </div>
+          )
         ) : (
           <button
             type="button"
             onClick={() => onAssignDriver(order)}
-            className="text-primary text-xs font-bold border border-primary/20 px-3 py-1 rounded hover:bg-primary hover:text-on-primary transition-all cursor-pointer"
+            className="text-primary text-[10px] font-bold border border-primary/20 px-3 py-1 rounded hover:bg-primary hover:text-on-primary transition-all cursor-pointer"
           >
-            Assign Driver
+            Assign Pickup Driver
           </button>
         )}
       </td>

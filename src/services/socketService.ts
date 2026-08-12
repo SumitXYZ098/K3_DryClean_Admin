@@ -111,12 +111,26 @@ export const connectSocket = (
 
     s.off("order-status-success");
     s.off("order-status-updated");
+    s.off("order-update");
     s.on("order-status-success", (data) => {
       console.log("[Socket.IO] Order status success:", data);
       if (onOrderStatusChange) onOrderStatusChange(data);
     });
     s.on("order-status-updated", (data) => {
       console.log("[Socket.IO] Order status updated event received:", data);
+      if (onOrderStatusChange) onOrderStatusChange(data);
+    });
+    s.on("order-update", (data) => {
+      console.log("[Socket.IO] order-update event received:", data);
+      useOrderStore
+        .getState()
+        .fetchOrders(true)
+        .catch((err) => {
+          console.error(
+            "[Socket.IO] Failed to auto-refresh orders on order-update:",
+            err
+          );
+        });
       if (onOrderStatusChange) onOrderStatusChange(data);
     });
   };
@@ -185,10 +199,17 @@ export const connectSocket = (
 /**
  * Emit update-order-status event over Socket.IO by order documentId
  */
-export const updateOrderStatusSocket = (
-  orderDocumentId: string,
-  orderStatus: string,
-) => {
+export const updateOrderStatusSocket = ({
+  orderDocumentId,
+  orderStatus,
+  pickupDriverDocumentId,
+  deliveryDriverDocumentId,
+}: {
+  orderDocumentId: string;
+  orderStatus?: string;
+  pickupDriverDocumentId?: string;
+  deliveryDriverDocumentId?: string;
+}) => {
   let activeSocket = getSocket();
   if (!activeSocket || !activeSocket.connected) {
     activeSocket = connectSocket();
@@ -198,6 +219,8 @@ export const updateOrderStatusSocket = (
     const payload = {
       orderDocumentId,
       orderStatus,
+      pickupDriverDocumentId,
+      deliveryDriverDocumentId,
     };
     console.log("[Socket.IO] Emitting update-order", payload);
     activeSocket.emit("update-order", payload);

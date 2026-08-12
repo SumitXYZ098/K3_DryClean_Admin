@@ -17,9 +17,6 @@ import OrderStatsBento from "../../components/orders/OrderStatsBento";
 import OrderFilterTabs from "../../components/orders/OrderFilterTabs";
 import OrderFilterBar from "../../components/orders/OrderFilterBar";
 import OrderTable from "../../components/orders/OrderTable";
-import FleetActivityCard from "../../components/orders/FleetActivityCard";
-import ServiceEfficiencyCard from "../../components/orders/ServiceEfficiencyCard";
-import CreateOrderModal from "../../components/orders/CreateOrderModal";
 import OrderDetailModal from "../../components/orders/OrderDetailModal";
 import UpdateOrderStatusModal from "../../components/orders/UpdateOrderStatusModal";
 import AssignDriverModal from "../../components/orders/AssignDriverModal";
@@ -34,8 +31,6 @@ export const OrdersPage: React.FC = () => {
   const {
     orders,
     isLoading,
-    fleetActivities,
-    addOrder,
     updateOrderStatus,
     updateOrderPaymentStatus,
     assignDriver,
@@ -50,7 +45,6 @@ export const OrdersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Modal States
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(
     null,
   );
@@ -92,13 +86,7 @@ export const OrdersPage: React.FC = () => {
           .toLowerCase()
           .includes(query);
         const matchesStatus = order.status.toLowerCase().includes(query);
-        const matchesDriver = order.driver?.name.toLowerCase().includes(query);
-        if (
-          !matchesId &&
-          !matchesCustomer &&
-          !matchesStatus &&
-          !matchesDriver
-        ) {
+        if (!matchesId && !matchesCustomer && !matchesStatus) {
           return false;
         }
       }
@@ -196,15 +184,15 @@ export const OrdersPage: React.FC = () => {
     setTimeout(() => {
       hideLoading();
       const headers =
-        "Order ID,Customer Name,Customer Tier,Pickup Date,Delivery Date,Driver,Payment,Status,Total Amount\n";
+        "Order ID,Customer Name,Customer Tier,Pickup Date,Delivery Date,Pickup Driver,Delivery Driver,Payment,Status,Total Amount\n";
       const rows = filteredOrders
         .map(
           (o) =>
             `"${o.id}","${o.customerName}","${o.customerTier}","${
               o.pickupDate
-            }","${o.deliveryDate}","${o.driver?.name || "Unassigned"}","${
-              o.paymentStatus
-            }","${o.status}",${o.totalAmount}`,
+            }","${o.deliveryDate}","${o.pickupPerson?.name || "Unassigned"}","${
+              o.deliveryPerson?.name || "Unassigned"
+            }","${o.paymentStatus}","${o.status}",${o.totalAmount}`,
         )
         .join("\n");
 
@@ -221,14 +209,6 @@ export const OrdersPage: React.FC = () => {
         type: "success",
       });
     }, 800);
-  };
-
-  const handleCreateOrder = (newOrderData: Omit<Order, "id" | "createdAt">) => {
-    const created = addOrder(newOrderData);
-    showSnackbar({
-      message: `Order ${created.id} created for ${created.customerName}`,
-      type: "success",
-    });
   };
 
   const handleUpdateStatus = (id: string, newStatus: OrderStatus) => {
@@ -364,7 +344,7 @@ export const OrdersPage: React.FC = () => {
       </div>
 
       {/* Footer Task Cards (Bento Extension) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
         <FleetActivityCard
           activities={fleetActivities}
           onViewFleetMap={() => {
@@ -384,7 +364,7 @@ export const OrdersPage: React.FC = () => {
             });
           }}
         />
-      </div>
+      </div> */}
 
       {/* Floating Micro-Interaction Help Button */}
       <div className="fixed bottom-8 right-8 z-50">
@@ -408,13 +388,6 @@ export const OrdersPage: React.FC = () => {
           </span>
         </button>
       </div>
-
-      {/* Modals */}
-      <CreateOrderModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateOrder}
-      />
 
       <OrderDetailModal
         order={selectedOrderDetail}

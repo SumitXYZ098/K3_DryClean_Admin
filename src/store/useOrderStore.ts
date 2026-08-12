@@ -9,7 +9,6 @@ export type OrderStatus =
   | "picked_up"
   | "processing"
   | "delivery_assigned"
-  | "ready_for_delivery"
   | "out_for_delivery"
   | "delivered";
 
@@ -59,7 +58,8 @@ export interface Order {
   customerPhone?: string;
   pickupDate: string;
   deliveryDate: string;
-  driver: DriverInfo | null;
+  pickupPerson: DriverInfo | null;
+  deliveryPerson: DriverInfo | null;
   paymentStatus: PaymentStatus;
   status: OrderStatus;
   serviceType: ServiceType;
@@ -120,12 +120,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
   hasFetched: false,
   error: null,
   fleetActivities: initialFleetActivities,
-  availableDrivers: [
-    { id: "d1", name: "John Smith", initials: "JS", phone: "(555) 111-2233" },
-    { id: "d2", name: "Mike Wong", initials: "MW", phone: "(555) 333-4455" },
-    { id: "d3", name: "David Miller", initials: "DM", phone: "(555) 222-7788" },
-    { id: "d4", name: "Sarah Vance", initials: "SV", phone: "(555) 444-1122" },
-  ],
+  availableDrivers: [],
 
   setOrders: (orders) => set({ orders, hasFetched: true }),
 
@@ -183,7 +178,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
 
     // Emit Socket event "update-order" with documentId
     const docId = targetOrder?.documentId?.toString() || "";
-    updateOrderStatusSocket(docId, newStatus);
+    updateOrderStatusSocket({ orderDocumentId: docId, orderStatus: newStatus });
   },
 
   updateOrderPaymentStatus: (id, paymentStatus) => {
@@ -195,11 +190,62 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
   },
 
   assignDriver: (id, driver) => {
+    const currentOrders = get().orders;
+    const targetOrder = currentOrders.find(
+      (o) => o.id === id || o.documentId === id,
+    );
+
+    const currentStatus = targetOrder?.status;
+    let newStatus: OrderStatus | undefined = currentStatus;
+    let isDeliveryPhase = false;
+
+    if (currentStatus === "pending") {
+      newStatus = "pickup_assigned";
+    } else if (
+      currentStatus === "processing" ||
+      currentStatus === "delivery_assigned" ||
+      currentStatus === "out_for_delivery"
+    ) {
+      newStatus = "delivery_assigned";
+      isDeliveryPhase = true;
+    }
+
+    const updatedPerson = isDeliveryPhase
+      ? { deliveryPerson: driver }
+      : { pickupPerson: driver };
+
+    // Optimistically update local Zustand state (pickupPerson/deliveryPerson and status)
     set((state) => ({
       orders: state.orders.map((o) =>
-        o.id === id || o.documentId === id ? { ...o, driver } : o,
+        o.id === id || o.documentId === id
+          ? { ...o, ...updatedPerson, status: newStatus || o.status }
+          : o,
       ),
     }));
+
+    // Emit Socket event "update-order" with documentId, status, and pickup/delivery driver ID
+    const docId = targetOrder?.documentId?.toString() || id;
+
+    if (isDeliveryPhase) {
+      updateOrderStatusSocket({
+        orderDocumentId: docId,
+        orderStatus: newStatus,
+        deliveryDriverDocumentId: driver.id,
+      });
+    } else {
+      updateOrderStatusSocket({
+        orderDocumentId: docId,
+        orderStatus: newStatus,
+        pickupDriverDocumentId: driver.id,
+      });
+    }
+
+    // Refetch orders to sync backend populated relations
+    setTimeout(() => {
+      get()
+        .fetchOrders(true)
+        .catch(() => {});
+    }, 1000);
   },
 
   deleteOrder: (id) => {
