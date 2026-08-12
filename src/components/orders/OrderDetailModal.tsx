@@ -137,9 +137,6 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             <p className="font-title-md text-sm text-on-surface font-bold">
               {order.customerName}
             </p>
-            <p className="text-xs text-primary font-medium">
-              {order.customerTier}
-            </p>
             <p className="text-xs text-secondary mt-2">
               Phone:{" "}
               <span className="text-on-surface">
@@ -252,10 +249,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     {item.quantity}
                   </td>
                   <td className="px-md py-2.5 text-secondary">
-                    ${item.price.toFixed(2)}
+                    ₹{item.price.toFixed(2)}
                   </td>
                   <td className="px-md py-2.5 text-right font-bold text-on-surface">
-                    ${(item.quantity * item.price).toFixed(2)}
+                    ₹{(item.quantity * item.price).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -264,7 +261,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <div className="p-md bg-surface-container-low border-t border-outline-variant flex justify-between items-center font-bold text-sm">
             <span className="text-on-surface">Total Order Amount</span>
             <span className="text-primary text-base">
-              ${order.totalAmount.toFixed(2)}
+              ₹{order.totalAmount.toFixed(2)}
             </span>
           </div>
         </div>

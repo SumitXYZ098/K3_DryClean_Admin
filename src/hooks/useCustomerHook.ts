@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import customerApi, {
   type CreateCustomerPayload,
   type CreateCustomerResponse,
@@ -12,6 +12,7 @@ import useCustomerStore, {
 } from "../store/useCustomerStore";
 import useLoadingStore from "../store/useLoadingStore";
 import useSnackbarStore from "../store/useSnackbarStore";
+import { connectSocket } from "../services/socketService";
 
 export const useCustomerHook = () => {
   const {
@@ -28,6 +29,11 @@ export const useCustomerHook = () => {
 
   const { showLoading, hideLoading } = useLoadingStore();
   const { showSnackbar } = useSnackbarStore();
+
+  useEffect(() => {
+    // Connect socket to ensure room admin-users is joined for real-time customer updates
+    connectSocket();
+  }, []);
 
   /**
    * Fetch all customers from API

@@ -13,8 +13,6 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
 }) => {
   if (!customer) return null;
 
-  console.log(customer);
-
   // Gather addresses array or fallback to top-level address fields
   const addresses: CustomerAddress[] =
     customer.customer_addresses && customer.customer_addresses.length > 0

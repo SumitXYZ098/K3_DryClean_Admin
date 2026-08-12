@@ -14,7 +14,7 @@ export interface ServiceSelectionSectionProps {
   onUpdateItem: (
     id: string,
     field: keyof SelectedServiceItem,
-    value: string | number
+    value: string | number,
   ) => void;
   onDeleteItem: (id: string) => void;
 }
@@ -29,12 +29,9 @@ export const itemPrices: Record<string, number> = {
   "Curtains/Drapes": 25.0,
 };
 
-export const ServiceSelectionSection: React.FC<ServiceSelectionSectionProps> = ({
-  items,
-  onAddItem,
-  onUpdateItem,
-  onDeleteItem,
-}) => {
+export const ServiceSelectionSection: React.FC<
+  ServiceSelectionSectionProps
+> = ({ items, onAddItem, onUpdateItem, onDeleteItem }) => {
   const handleItemSelect = (id: string, itemName: string) => {
     const defaultPrice = itemPrices[itemName] || 10.0;
     onUpdateItem(id, "itemName", itemName);
@@ -57,7 +54,10 @@ export const ServiceSelectionSection: React.FC<ServiceSelectionSectionProps> = (
           onClick={onAddItem}
           className="flex items-center gap-1 text-primary text-sm font-bold hover:underline cursor-pointer"
         >
-          <span className="material-symbols-outlined text-sm" data-icon="add_circle">
+          <span
+            className="material-symbols-outlined text-sm"
+            data-icon="add_circle"
+          >
             add_circle
           </span>
           Add Service
@@ -111,7 +111,9 @@ export const ServiceSelectionSection: React.FC<ServiceSelectionSectionProps> = (
                   <td className="py-4 px-2">
                     <select
                       value={item.itemName}
-                      onChange={(e) => handleItemSelect(item.id, e.target.value)}
+                      onChange={(e) =>
+                        handleItemSelect(item.id, e.target.value)
+                      }
                       className="w-full bg-surface border border-outline-variant rounded-lg p-2 text-sm text-on-surface outline-none focus:border-primary"
                     >
                       <option value="Suit (2-piece)">Suit (2-piece)</option>
@@ -134,7 +136,7 @@ export const ServiceSelectionSection: React.FC<ServiceSelectionSectionProps> = (
                         onUpdateItem(
                           item.id,
                           "quantity",
-                          Math.max(1, parseInt(e.target.value) || 1)
+                          Math.max(1, parseInt(e.target.value) || 1),
                         )
                       }
                       className="w-full bg-surface border border-outline-variant rounded-lg p-2 text-sm text-center font-bold text-on-surface outline-none focus:border-primary"
@@ -143,12 +145,12 @@ export const ServiceSelectionSection: React.FC<ServiceSelectionSectionProps> = (
 
                   {/* Unit Price */}
                   <td className="py-4 px-2 text-right font-medium text-on-surface">
-                    ${item.unitPrice.toFixed(2)}
+                    ₹{item.unitPrice.toFixed(2)}
                   </td>
 
                   {/* Line Total */}
                   <td className="py-4 px-2 text-right font-bold text-on-surface">
-                    ${lineTotal.toFixed(2)}
+                    ₹{lineTotal.toFixed(2)}
                   </td>
 
                   {/* Action Delete */}

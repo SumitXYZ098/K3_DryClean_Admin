@@ -41,12 +41,12 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
         <div className="flex justify-between text-body-md text-secondary">
           <span>Items Subtotal ({itemCount})</span>
           <span className="font-medium text-on-surface">
-            ${subtotal.toFixed(2)}
+            ₹{subtotal.toFixed(2)}
           </span>
         </div>
         <div className="flex justify-between text-body-md text-secondary">
           <span>Service Tax (8%)</span>
-          <span className="font-medium text-on-surface">${tax.toFixed(2)}</span>
+          <span className="font-medium text-on-surface">₹{tax.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-body-md text-secondary">
           <span>Express Fee</span>
@@ -55,13 +55,13 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
               expressFee > 0 ? "text-primary font-bold" : "text-on-surface"
             }`}
           >
-            ${expressFee.toFixed(2)}
+            ₹{expressFee.toFixed(2)}
           </span>
         </div>
         <div className="flex justify-between text-body-md text-secondary">
           <span>Delivery Fee</span>
           <span className="text-primary font-bold uppercase text-xs tracking-wider">
-            {deliveryFee === 0 ? "FREE" : `$${deliveryFee.toFixed(2)}`}
+            {deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}
           </span>
         </div>
       </div>
@@ -73,7 +73,7 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
             Total Amount
           </span>
           <span className="text-3xl font-bold text-primary">
-            ${total.toFixed(2)}
+            ₹{total.toFixed(2)}
           </span>
         </div>
 
