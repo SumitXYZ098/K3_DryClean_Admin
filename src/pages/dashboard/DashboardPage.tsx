@@ -1,13 +1,12 @@
-import type React from "react";
+import React, { useEffect } from "react";
 import dayjs from "dayjs";
 import KpiCard from "../../components/dashboard/KpiCard";
 import RevenueChart from "../../components/dashboard/RevenueChart";
 import OrderStatusChart from "../../components/dashboard/OrderStatusChart";
 import LatestOrdersTable from "../../components/dashboard/LatestOrdersTable";
-import DriverActivityList from "../../components/dashboard/DriverActivityList";
 import useSnackbarStore from "../../store/useSnackbarStore";
-import { useEffect } from "react";
 import useHeaderStore from "../../store/useHeaderStore";
+import useDashboardStore from "../../store/useDashboardStore";
 import { useNavigate } from "react-router";
 
 export const DashboardPage: React.FC = () => {
@@ -15,7 +14,29 @@ export const DashboardPage: React.FC = () => {
   const { setCustomActionHandler } = useHeaderStore();
   const navigate = useNavigate();
 
+  const {
+    stats,
+    revenueData,
+    serviceStatsData,
+    isLoading: isDashboardLoading,
+    fetchDashboardData,
+  } = useDashboardStore();
+
   const formattedDate = dayjs().format("dddd, MMM D, YYYY");
+
+  useEffect(() => {
+    // Initial fetch (only triggers skeleton loader if not previously fetched)
+    fetchDashboardData();
+
+    // Background silent auto-refetch every 5 minutes (300,000 ms)
+    const interval = setInterval(() => {
+      fetchDashboardData(true);
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [fetchDashboardData]);
 
   useEffect(() => {
     setCustomActionHandler(() => {
@@ -26,6 +47,17 @@ export const DashboardPage: React.FC = () => {
       setCustomActionHandler(null);
     };
   }, [setCustomActionHandler, navigate]);
+
+  const getTrendType = (trend: string): "positive" | "negative" | "neutral" => {
+    if (trend === "increased") return "positive";
+    if (trend === "decreased") return "negative";
+    return "neutral";
+  };
+
+  const formatPercentChange = (val: number) => {
+    if (val > 0) return `+${val}%`;
+    return `${val}%`;
+  };
 
   return (
     <div className="space-y-xl pb-lg">
@@ -39,140 +71,116 @@ export const DashboardPage: React.FC = () => {
             Operational summary for {formattedDate}
           </p>
         </div>
-        <div className="flex gap-sm">
-          <button
-            onClick={() =>
-              showSnackbar({
-                message: "Filter changed to Last 30 Days",
-                type: "info",
-              })
-            }
-            className="bg-surface border border-outline-variant px-md py-2 rounded-default font-title-md text-sm text-secondary hover:bg-secondary-container/20 flex items-center gap-sm transition-all cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-md">
-              calendar_today
-            </span>
-            Last 30 Days
-          </button>
-
-          <button
-            onClick={() =>
-              showSnackbar({
-                message: "Exporting PDF report...",
-                type: "success",
-              })
-            }
-            className="bg-surface border border-outline-variant px-md py-2 rounded-default font-title-md text-sm text-secondary hover:bg-secondary-container/20 flex items-center gap-sm transition-all cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-md">download</span>
-            Export PDF
-          </button>
-        </div>
       </div>
 
       {/* KPI Grid (5 items) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-lg mb-xl">
-        <KpiCard
-          title="Today's Orders"
-          value="42"
-          change="+12%"
-          changeType="positive"
-          icon="shopping_bag"
-          iconColorClass="text-primary"
-          iconBgClass="bg-primary/5"
-          onClick={() =>
-            showSnackbar({
-              message: "42 orders placed today",
-              type: "info",
-            })
-          }
-        />
-
-        <KpiCard
-          title="Active Orders"
-          value="156"
-          change="In Progress"
-          changeType="info"
-          icon="sync"
-          iconColorClass="text-blue-600"
-          iconBgClass="bg-blue-50"
-          onClick={() =>
-            showSnackbar({
-              message: "156 active orders in progress",
-              type: "info",
-            })
-          }
-        />
-
-        <KpiCard
-          title="Revenue Today"
-          value="₹1,240"
-          change="+8.4%"
-          changeType="positive"
-          icon="payments"
-          iconColorClass="text-green-600"
-          iconBgClass="bg-green-50"
-        />
-
-        <KpiCard
-          title="Monthly Revenue"
-          value="₹45.2k"
-          change="+21%"
-          changeType="positive"
-          icon="monetization_on"
-          iconColorClass="text-primary"
-          iconBgClass="bg-primary/5"
-        />
-
-        <KpiCard
-          title="Total Customers"
-          value="2,450"
-          change="+42 new"
-          changeType="neutral"
-          icon="group"
-          iconColorClass="text-amber-600"
-          iconBgClass="bg-amber-50"
-        />
+        {isDashboardLoading || !stats
+          ? Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={`kpi-skeleton-${index}`}
+                className="bg-white border border-outline-variant p-lg rounded-md kpi-card-shadow animate-pulse flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-sm">
+                  <div className="h-3 bg-surface-container-high rounded w-24"></div>
+                  <div className="w-7 h-7 bg-surface-container-high rounded"></div>
+                </div>
+                <div className="h-8 bg-surface-container-high rounded w-20 mb-xs"></div>
+                <div className="flex items-center gap-xs">
+                  <div className="w-3 h-3 bg-surface-container-high rounded-full"></div>
+                  <div className="h-3 bg-surface-container-high rounded w-14"></div>
+                </div>
+              </div>
+            ))
+          : [
+              <KpiCard
+                key="kpi-1"
+                title="Today's Orders"
+                value={stats.todayOrders.count}
+                change={formatPercentChange(stats.todayOrders.percentageChange)}
+                changeType={getTrendType(stats.todayOrders.trend)}
+                icon="shopping_bag"
+                iconColorClass="text-primary"
+                iconBgClass="bg-primary/5"
+                onClick={() =>
+                  showSnackbar({
+                    message: `${stats.todayOrders.count} orders placed today`,
+                    type: "info",
+                  })
+                }
+              />,
+              <KpiCard
+                key="kpi-2"
+                title="Active Orders"
+                value={stats.activeOrders.count}
+                change="In Progress"
+                changeType="info"
+                icon="sync"
+                iconColorClass="text-blue-600"
+                iconBgClass="bg-blue-50"
+                onClick={() =>
+                  showSnackbar({
+                    message: `${stats.activeOrders.count} active orders in progress`,
+                    type: "info",
+                  })
+                }
+              />,
+              <KpiCard
+                key="kpi-3"
+                title="Revenue Today"
+                value={`₹${stats.todayRevenue.amount.toLocaleString("en-IN")}`}
+                change={formatPercentChange(
+                  stats.todayRevenue.percentageChange,
+                )}
+                changeType={getTrendType(stats.todayRevenue.trend)}
+                icon="payments"
+                iconColorClass="text-green-600"
+                iconBgClass="bg-green-50"
+              />,
+              <KpiCard
+                key="kpi-4"
+                title="Monthly Revenue"
+                value={`₹${stats.monthlyRevenue.amount.toLocaleString("en-IN")}`}
+                change={formatPercentChange(
+                  stats.monthlyRevenue.percentageChange,
+                )}
+                changeType={getTrendType(stats.monthlyRevenue.trend)}
+                icon="monetization_on"
+                iconColorClass="text-primary"
+                iconBgClass="bg-primary/5"
+              />,
+              <KpiCard
+                key="kpi-5"
+                title="Total Customers"
+                value={stats.customers.total.toLocaleString("en-IN")}
+                change={`+${stats.customers.newCustomers} new`}
+                changeType="neutral"
+                icon="group"
+                iconColorClass="text-amber-600"
+                iconBgClass="bg-amber-50"
+              />,
+            ]}
       </div>
 
       {/* Bento Grid Charts Section */}
       <div className="grid grid-cols-12 gap-lg mb-xl min-h-100">
-        {/* Revenue Graph (8 cols) */}
-        <div className="col-span-12 lg:col-span-8">
-          <RevenueChart />
+        {/* Revenue Graph (7 cols) */}
+        <div className="col-span-12 lg:col-span-7">
+          <RevenueChart data={revenueData} isLoading={isDashboardLoading} />
         </div>
 
-        {/* Order Status Pie Chart (4 cols) */}
-        <div className="col-span-12 lg:col-span-4">
-          <OrderStatusChart totalOrders={156} />
+        {/* Order Status Pie Chart (5 cols) */}
+        <div className="col-span-12 lg:col-span-5">
+          <OrderStatusChart
+            data={serviceStatsData}
+            isLoading={isDashboardLoading}
+          />
         </div>
       </div>
 
-      {/* Lower Section (Table + Activity) */}
-      <div className="grid grid-cols-12 gap-lg min-h-120">
-        {/* Latest Orders Table (9 cols) */}
-        <div className="col-span-12 lg:col-span-9">
-          <LatestOrdersTable
-            onViewAll={() =>
-              showSnackbar({
-                message: "Navigating to all orders view...",
-                type: "info",
-              })
-            }
-          />
-        </div>
-
-        {/* Driver Activity (3 cols) */}
-        <div className="col-span-12 lg:col-span-3">
-          <DriverActivityList
-            onManageFleet={() =>
-              showSnackbar({
-                message: "Opening fleet management console...",
-                type: "info",
-              })
-            }
-          />
-        </div>
+      {/* Lower Section (Table) */}
+      <div className="min-h-120">
+        <LatestOrdersTable isLoading={isDashboardLoading} />
       </div>
     </div>
   );

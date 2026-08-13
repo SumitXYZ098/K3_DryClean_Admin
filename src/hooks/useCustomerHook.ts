@@ -31,7 +31,7 @@ export const useCustomerHook = () => {
   const { showSnackbar } = useSnackbarStore();
 
   useEffect(() => {
-    // Connect socket to ensure room admin-users is joined for real-time customer updates
+    // Connect socket for real-time customer updates
     connectSocket();
   }, []);
 

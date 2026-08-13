@@ -145,7 +145,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               <p className="font-title-md text-on-surface font-bold">
                 No notifications yet
               </p>
-              <p className="text-body-md text-secondary max-w-xs">
+              <p className="text-body-md text-secondary">
                 You're all caught up! Real-time alerts for orders and users will
                 appear here.
               </p>

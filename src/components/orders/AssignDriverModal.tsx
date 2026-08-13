@@ -81,7 +81,9 @@ export const AssignDriverModal: React.FC<AssignDriverModalProps> = ({
             </span>
             <div>
               <h3 className="font-title-md text-on-surface">
-                {order.status === "processing"
+                {order.status === "processing" ||
+                order.status === "delivery_assigned" ||
+                order.status === "out_for_delivery"
                   ? "Assign Delivery Driver"
                   : "Assign Pickup Driver"}
               </h3>
@@ -90,13 +92,6 @@ export const AssignDriverModal: React.FC<AssignDriverModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-secondary hover:text-on-surface p-1 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
         </div>
 
         {/* Modal Body / Driver List */}
@@ -189,13 +184,6 @@ export const AssignDriverModal: React.FC<AssignDriverModalProps> = ({
 
           {/* Modal Footer */}
           <div className="flex items-center justify-end gap-3 pt-md border-t border-outline-variant">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-outline-variant rounded-lg text-sm text-secondary hover:bg-surface-container transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
             <button
               type="submit"
               disabled={!selectedDriverId}

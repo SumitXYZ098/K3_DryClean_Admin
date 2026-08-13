@@ -6,7 +6,7 @@ export interface OrderTableRowProps {
   onViewDetails: (order: Order) => void;
   onUpdateStatus: (order: Order) => void;
   onAssignDriver: (order: Order) => void;
-  onDeleteOrder: (order: Order) => void;
+  // onDeleteOrder: (order: Order) => void;
 }
 
 export const OrderTableRow: React.FC<OrderTableRowProps> = ({
@@ -14,7 +14,7 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
   onViewDetails,
   onUpdateStatus,
   onAssignDriver,
-  onDeleteOrder,
+  // onDeleteOrder,
 }) => {
   // Render payment badge
   const renderPaymentBadge = (status: Order["paymentStatus"]) => {
@@ -205,7 +205,7 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
           </span>
         </button>
 
-        <button
+        {/* <button
           type="button"
           onClick={() => onDeleteOrder(order)}
           className="text-on-surface-variant hover:text-error transition-colors cursor-pointer p-1"
@@ -217,7 +217,7 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
           >
             delete
           </span>
-        </button>
+        </button> */}
       </td>
     </tr>
   );

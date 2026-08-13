@@ -134,7 +134,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             <p className="text-label-sm uppercase font-bold text-on-surface-variant mb-2">
               Customer Information
             </p>
-            <p className="font-title-md text-sm text-on-surface font-bold">
+            <p className="font-title-md text-sm text-on-surface font-bold capitalize">
               {order.customerName}
             </p>
             <p className="text-xs text-secondary mt-2">
@@ -162,7 +162,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <span className="text-secondary font-medium">Pickup Driver:</span>
               {order.pickupPerson ? (
                 <span className="font-bold text-on-surface">
-                  {order.pickupPerson.name} ({order.pickupPerson.initials})
+                  {order.pickupPerson.name}
                 </span>
               ) : order.status === "pending" ? (
                 <button
@@ -179,10 +179,12 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
             {/* Delivery Driver */}
             <div className="flex items-center justify-between text-xs border-b border-outline-variant/60 pb-1.5">
-              <span className="text-secondary font-medium">Delivery Driver:</span>
+              <span className="text-secondary font-medium">
+                Delivery Driver:
+              </span>
               {order.deliveryPerson ? (
                 <span className="font-bold text-on-surface">
-                  {order.deliveryPerson.name} ({order.deliveryPerson.initials})
+                  {order.deliveryPerson.name}
                 </span>
               ) : order.status === "processing" ? (
                 <button

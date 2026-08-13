@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
-import notificationApi, {
-  type NotificationItem,
-} from "../api/notificationApi";
+import notificationApi, { type NotificationItem } from "../api/notificationApi";
 import {
   connectSocket as connectSocketService,
   disconnectSocket as disconnectSocketService,
@@ -42,10 +40,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const rawData = response.data || [];
 
       // Add default unread state if missing
-      const formatted: NotificationItem[] = rawData.map((item) => ({
-        ...item,
-        read: item.read ?? false,
-      }));
+      const formatted: NotificationItem[] = rawData
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .map((item) => ({
+          ...item,
+          read: item.read ?? false,
+        }));
 
       const unread = formatted.filter((item) => !item.read).length;
 
@@ -67,20 +70,36 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   addNotification: (newNotif) => {
-    const formattedItem: NotificationItem = {
-      id: newNotif.id || Date.now(),
-      documentId: newNotif.documentId || `doc_${Date.now()}`,
-      title: newNotif.title || "New Notification",
-      description: newNotif.description || "",
-      type: newNotif.type || "system",
-      createdAt: newNotif.createdAt || new Date().toISOString(),
-      read: false,
-    };
+    const newId = newNotif.id;
+    const newDocId = newNotif.documentId;
 
-    set((state) => ({
-      notifications: [formattedItem, ...state.notifications],
-      unreadCount: state.unreadCount + 1,
-    }));
+    set((state) => {
+      // Prevent duplicate notification entries with identical ID or documentId
+      const isDuplicate = state.notifications.some(
+        (n) =>
+          (newId !== undefined && n.id === newId) ||
+          (newDocId !== undefined && n.documentId === newDocId),
+      );
+
+      if (isDuplicate) {
+        return state;
+      }
+
+      const formattedItem: NotificationItem = {
+        id: newNotif.id || Date.now(),
+        documentId: newNotif.documentId || `doc_${Date.now()}`,
+        title: newNotif.title || "New Notification",
+        description: newNotif.description || "",
+        type: newNotif.type || "system",
+        createdAt: newNotif.createdAt || new Date().toISOString(),
+        read: false,
+      };
+
+      return {
+        notifications: [formattedItem, ...state.notifications],
+        unreadCount: state.unreadCount + 1,
+      };
+    });
   },
 
   markAllAsRead: () => {

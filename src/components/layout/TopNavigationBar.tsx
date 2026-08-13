@@ -1,5 +1,4 @@
 import type React from "react";
-import { useState } from "react";
 import { useLocation } from "react-router";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import useHeaderStore from "../../store/useHeaderStore";
@@ -93,12 +92,6 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
     clearNotifications,
   } = useNotification();
 
-  const [isDarkMode, setIsDarkMode] = useState(() =>
-    typeof document !== "undefined"
-      ? document.documentElement.classList.contains("dark")
-      : false,
-  );
-
   // Dynamic header config based on current route
   const currentConfig = pageConfigs[location.pathname] || pageConfigs.default;
 
@@ -107,16 +100,6 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
     if (!searchQuery.trim()) return;
     showSnackbar({
       message: `Searching ${currentConfig.actionButtonText.replace("Add ", "").replace("New ", "")} for "${searchQuery}"...`,
-      type: "info",
-    });
-  };
-
-  const toggleDarkMode = () => {
-    const nextMode = !isDarkMode;
-    setIsDarkMode(nextMode);
-    document.documentElement.classList.toggle("dark", nextMode);
-    showSnackbar({
-      message: `Switched to ${nextMode ? "Dark" : "Light"} mode`,
       type: "info",
     });
   };
@@ -186,33 +169,6 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
           onMarkAllAsRead={markAllAsRead}
           onClearAll={clearNotifications}
         />
-
-        <button
-          type="button"
-          onClick={() =>
-            showSnackbar({
-              message: "Language switcher set to English (US)",
-              type: "info",
-            })
-          }
-          className="p-2 text-secondary hover:bg-secondary-container/50 rounded-full transition-colors cursor-pointer"
-          title="Change language"
-        >
-          <span className="material-symbols-outlined" data-icon="language">
-            language
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={toggleDarkMode}
-          className="p-2 text-secondary hover:bg-secondary-container/50 rounded-full transition-colors cursor-pointer"
-          title="Toggle Dark/Light Mode"
-        >
-          <span className="material-symbols-outlined">
-            {isDarkMode ? "light_mode" : "dark_mode"}
-          </span>
-        </button>
 
         <div className="h-8 w-px bg-outline-variant mx-2" />
 

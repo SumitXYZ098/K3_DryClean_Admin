@@ -114,8 +114,8 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
                   isDisabled
                     ? "bg-surface-container-low/50 border-outline-variant/30 opacity-60 cursor-not-allowed"
                     : isSelected
-                    ? "bg-primary/5 border-primary ring-1 ring-primary/30 cursor-pointer"
-                    : "bg-surface-container-lowest border-outline-variant hover:border-outline cursor-pointer"
+                      ? "bg-primary/5 border-primary ring-1 ring-primary/30 cursor-pointer"
+                      : "bg-surface-container-lowest border-outline-variant hover:border-outline cursor-pointer"
                 }`}
               >
                 <input

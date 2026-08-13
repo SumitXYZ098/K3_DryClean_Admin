@@ -13,7 +13,7 @@ export interface OrderTableProps {
   onViewDetails: (order: Order) => void;
   onUpdateStatus: (order: Order) => void;
   onAssignDriver: (order: Order) => void;
-  onDeleteOrder: (order: Order) => void;
+  // onDeleteOrder: (order: Order) => void;
 }
 
 export const OrderTable: React.FC<OrderTableProps> = ({
@@ -26,7 +26,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
   onViewDetails,
   onUpdateStatus,
   onAssignDriver,
-  onDeleteOrder,
+  // onDeleteOrder,
 }) => {
   return (
     <div className="bg-surface-container-lowest border-t border-outline-variant">
@@ -99,7 +99,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   onViewDetails={onViewDetails}
                   onUpdateStatus={onUpdateStatus}
                   onAssignDriver={onAssignDriver}
-                  onDeleteOrder={onDeleteOrder}
+                  // onDeleteOrder={onDeleteOrder}
                 />
               ))
             ) : (

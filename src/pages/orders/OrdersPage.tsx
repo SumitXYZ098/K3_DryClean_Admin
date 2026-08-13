@@ -34,7 +34,6 @@ export const OrdersPage: React.FC = () => {
     updateOrderStatus,
     updateOrderPaymentStatus,
     assignDriver,
-    deleteOrder,
   } = useOrders();
 
   // Filters State
@@ -211,15 +210,50 @@ export const OrdersPage: React.FC = () => {
     }, 800);
   };
 
-  const handleUpdateStatus = (id: string, newStatus: OrderStatus) => {
-    updateOrderStatus(id, newStatus);
-    showSnackbar({
-      message: `Order ${id} status updated to ${newStatus}`,
-      type: "success",
-    });
+  const handleUpdateStatus = (
+    id: string,
+    newStatus: OrderStatus,
+    driver?: DriverInfo,
+  ) => {
+    if (driver && (newStatus === "pickup_assigned" || newStatus === "delivery_assigned")) {
+      // When a driver is selected, call ONLY assignDriver (not updateOrderStatus)
+      assignDriver(id, driver);
+      showSnackbar({
+        message: `Order ${id} assigned to driver ${driver.name}`,
+        type: "success",
+      });
+    } else if (newStatus === "pickup_assigned" || newStatus === "delivery_assigned") {
+      // Do NOT call updateOrderStatus without a driver. Open AssignDriverModal directly instead.
+      const targetOrder =
+        orders.find((o) => o.id === id || o.documentId === id) ||
+        statusModalOrder ||
+        selectedOrderDetail;
+
+      if (targetOrder) {
+        setSelectedOrderDetail(null);
+        setStatusModalOrder(null);
+        setAssignDriverOrder({ ...targetOrder, status: newStatus });
+      }
+      return;
+    } else {
+      // For all other statuses, perform standard status update
+      updateOrderStatus(id, newStatus);
+      showSnackbar({
+        message: `Order ${id} status updated to ${newStatus.replace(/_/g, " ")}`,
+        type: "success",
+      });
+    }
 
     if (selectedOrderDetail && selectedOrderDetail.id === id) {
-      setSelectedOrderDetail({ ...selectedOrderDetail, status: newStatus });
+      setSelectedOrderDetail({
+        ...selectedOrderDetail,
+        status: newStatus,
+        ...(driver
+          ? newStatus === "pickup_assigned"
+            ? { pickupPerson: driver }
+            : { deliveryPerson: driver }
+          : {}),
+      });
     }
   };
 
@@ -243,14 +277,6 @@ export const OrdersPage: React.FC = () => {
     showSnackbar({
       message: `Driver ${driver.name} assigned to Order ${orderId}`,
       type: "success",
-    });
-  };
-
-  const handleDeleteOrder = (order: Order) => {
-    deleteOrder(order.id);
-    showSnackbar({
-      message: `Order ${order.id} deleted`,
-      type: "warning",
     });
   };
 
@@ -339,54 +365,7 @@ export const OrdersPage: React.FC = () => {
           onViewDetails={(ord) => setSelectedOrderDetail(ord)}
           onUpdateStatus={(ord) => setStatusModalOrder(ord)}
           onAssignDriver={(ord) => setAssignDriverOrder(ord)}
-          onDeleteOrder={handleDeleteOrder}
         />
-      </div>
-
-      {/* Footer Task Cards (Bento Extension) */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
-        <FleetActivityCard
-          activities={fleetActivities}
-          onViewFleetMap={() => {
-            showSnackbar({
-              message: "Opening Fleet Logistics Map view...",
-              type: "info",
-            });
-          }}
-        />
-
-        <ServiceEfficiencyCard
-          onOpenReport={() => {
-            showSnackbar({
-              message:
-                "Opening Full Operations & Efficiency Analytics Report...",
-              type: "info",
-            });
-          }}
-        />
-      </div> */}
-
-      {/* Floating Micro-Interaction Help Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button
-          type="button"
-          onClick={() =>
-            showSnackbar({
-              message:
-                "Need assistance? Contact K3 DryClean Operations Support at ext 402.",
-              type: "info",
-            })
-          }
-          className="w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform group cursor-pointer"
-          title="Help & Support"
-        >
-          <span
-            className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform"
-            data-icon="help"
-          >
-            help
-          </span>
-        </button>
       </div>
 
       <OrderDetailModal

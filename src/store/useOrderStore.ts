@@ -199,8 +199,9 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
     let newStatus: OrderStatus | undefined = currentStatus;
     let isDeliveryPhase = false;
 
-    if (currentStatus === "pending") {
+    if (currentStatus === "pending" || currentStatus === "pickup_assigned") {
       newStatus = "pickup_assigned";
+      isDeliveryPhase = false;
     } else if (
       currentStatus === "processing" ||
       currentStatus === "delivery_assigned" ||
@@ -241,11 +242,11 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
     }
 
     // Refetch orders to sync backend populated relations
-    setTimeout(() => {
-      get()
-        .fetchOrders(true)
-        .catch(() => {});
-    }, 1000);
+    // setTimeout(() => {
+    //   get()
+    //     .fetchOrders(true)
+    //     .catch(() => {});
+    // }, 10000);
   },
 
   deleteOrder: (id) => {

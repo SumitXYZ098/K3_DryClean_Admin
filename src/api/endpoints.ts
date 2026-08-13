@@ -8,6 +8,11 @@ export const ENDPOINTS = {
   verifyOtp: `${BASE_URL}/api/verify-otp`,
   resendOtp: `${BASE_URL}/api/resend-otp`,
 
+  // dashboard endpoints
+  getOrderServiceStats: `${BASE_URL}/api/admin/order-service-stats`,
+  getRevenueTrends: `${BASE_URL}/api/admin/revenue-trends`,
+  getAllDashboardStats: `${BASE_URL}/api/admin/all-dashboard-stats`,
+
   // customer endpoints
   createCustomer: `${BASE_URL}/api/create-user-manually`,
   getCustomer: `${BASE_URL}/api/user-profiles`,
@@ -26,10 +31,8 @@ export const ENDPOINTS = {
   getDriverDetailsById: (docId: string) =>
     `${BASE_URL}/api/driver-details/${docId}`,
   createDriver: `${BASE_URL}/api/driver-details`,
-  updateDriver: (docId: string) =>
-    `${BASE_URL}/api/driver-details/${docId}`,
-  deleteDriver: (docId: string) =>
-    `${BASE_URL}/api/driver-details/${docId}`,
+  updateDriver: (docId: string) => `${BASE_URL}/api/driver-details/${docId}`,
+  deleteDriver: (docId: string) => `${BASE_URL}/api/driver-details/${docId}`,
 
   // upload endpoints
   uploadDoc: `${BASE_URL}/api/upload`,
