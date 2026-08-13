@@ -115,7 +115,15 @@ export const mapApiOrderToOrder = (apiOrder: ApiOrder): Order => {
     const pLower = apiOrder.paymentStatus.toLowerCase();
     if (pLower === "paid" || pLower === "completed") paymentStatus = "Paid";
     else if (pLower === "refunded") paymentStatus = "Refunded";
+    else if (pLower === "cancelled" || pLower === "canceled") paymentStatus = "cancelled";
     else paymentStatus = "Unpaid";
+  }
+
+  let orderStatusMapped: OrderStatus = "pending";
+  if (apiOrder.orderStatus) {
+    const sLower = apiOrder.orderStatus.toLowerCase();
+    if (sLower === "cancelled" || sLower === "canceled") orderStatusMapped = "cancelled";
+    else orderStatusMapped = apiOrder.orderStatus as OrderStatus;
   }
 
   const items: OrderItem[] = (apiOrder.orderItems || []).map((it, idx) => ({
@@ -147,7 +155,7 @@ export const mapApiOrderToOrder = (apiOrder: ApiOrder): Order => {
     deliveryPerson,
     pickupPerson,
     paymentStatus,
-    status: (apiOrder.orderStatus as OrderStatus) || "pending",
+    status: orderStatusMapped,
     serviceType,
     totalAmount: apiOrder.grandTotal || 0,
     items,

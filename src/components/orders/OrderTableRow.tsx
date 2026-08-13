@@ -16,6 +16,11 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
   onAssignDriver,
   // onDeleteOrder,
 }) => {
+  const isCancelled =
+    order.status === "cancelled" ||
+    order.paymentStatus === "cancelled" ||
+    order.paymentStatus === "Cancelled";
+
   // Render payment badge
   const renderPaymentBadge = (status: Order["paymentStatus"]) => {
     switch (status) {
@@ -35,6 +40,13 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
         return (
           <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
             Refunded
+          </span>
+        );
+      case "cancelled":
+      case "Cancelled":
+        return (
+          <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">
+            Cancelled
           </span>
         );
       default:
@@ -87,17 +99,31 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
             Delivered
           </span>
         );
+      case "cancelled":
+        return (
+          <span className="px-2.5 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-bold">
+            Cancelled
+          </span>
+        );
       default:
         return null;
     }
   };
 
   return (
-    <tr className="hover:bg-primary-container/5 transition-colors group capitalize">
+    <tr
+      className={`transition-colors group capitalize ${
+        isCancelled
+          ? "opacity-50 bg-gray-100/70 pointer-events-none select-none"
+          : "hover:bg-primary-container/5"
+      }`}
+    >
       {/* Order ID */}
       <td
-        className="px-lg py-4 font-bold text-primary cursor-pointer hover:underline"
-        onClick={() => onViewDetails(order)}
+        className={`px-lg py-4 font-bold text-primary ${
+          isCancelled ? " text-gray-500" : "cursor-pointer hover:underline"
+        }`}
+        onClick={() => !isCancelled && onViewDetails(order)}
       >
         <span className="text-xs">{order.id}</span>
       </td>
@@ -108,9 +134,6 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
           <span className="font-title-md text-sm text-on-surface">
             {order.customerName}
           </span>
-          {/* <span className="text-xs text-on-surface-variant">
-            {order.customerTier}
-          </span> */}
         </div>
       </td>
 
@@ -126,7 +149,10 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
 
       {/* Driver Info or Assign Action */}
       <td className="px-lg py-4">
-        {order.status === "pickup_assigned" || order.status === "picked_up" ? (
+        {isCancelled ? (
+          <span className="text-xs text-gray-400 italic">N/A (Cancelled)</span>
+        ) : order.status === "pickup_assigned" ||
+          order.status === "picked_up" ? (
           order.pickupPerson && (
             <div className="flex items-center gap-2 group">
               <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-800 text-[10px] flex items-center justify-center font-bold">
@@ -140,6 +166,7 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
         ) : order.status === "processing" ? (
           <button
             type="button"
+            disabled={isCancelled}
             onClick={() => onAssignDriver(order)}
             className="text-primary text-[10px] font-bold border border-primary/20 px-3 py-1 rounded hover:bg-primary hover:text-on-primary transition-all cursor-pointer"
           >
@@ -161,6 +188,7 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
         ) : (
           <button
             type="button"
+            disabled={isCancelled}
             onClick={() => onAssignDriver(order)}
             className="text-primary text-[10px] font-bold border border-primary/20 px-3 py-1 rounded hover:bg-primary hover:text-on-primary transition-all cursor-pointer"
           >
@@ -179,8 +207,9 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
       <td className="px-lg py-4 text-right space-x-2 whitespace-nowrap">
         <button
           type="button"
-          onClick={() => onViewDetails(order)}
-          className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1"
+          disabled={isCancelled}
+          onClick={() => !isCancelled && onViewDetails(order)}
+          className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1 disabled:opacity-30 disabled:cursor-not-allowed"
           title="View Details"
         >
           <span
@@ -193,8 +222,9 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
 
         <button
           type="button"
-          onClick={() => onUpdateStatus(order)}
-          className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1"
+          disabled={isCancelled}
+          onClick={() => !isCancelled && onUpdateStatus(order)}
+          className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1 disabled:opacity-30 disabled:cursor-not-allowed"
           title="Update Status"
         >
           <span
@@ -204,20 +234,6 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
             edit_square
           </span>
         </button>
-
-        {/* <button
-          type="button"
-          onClick={() => onDeleteOrder(order)}
-          className="text-on-surface-variant hover:text-error transition-colors cursor-pointer p-1"
-          title="Delete Order"
-        >
-          <span
-            className="material-symbols-outlined text-xl"
-            data-icon="delete"
-          >
-            delete
-          </span>
-        </button> */}
       </td>
     </tr>
   );

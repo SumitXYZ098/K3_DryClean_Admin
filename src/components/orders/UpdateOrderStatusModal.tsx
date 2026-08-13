@@ -103,8 +103,10 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-sm">
           {statuses.map((st, index) => {
-            const isDisabled =
+            const isPast =
               currentStatusIndex !== -1 && index < currentStatusIndex;
+            const isCurrent = order.status === st.value;
+            const isDisabled = isPast || isCurrent;
             const isSelected = selectedStatus === st.value;
             return (
               <label
@@ -147,11 +149,15 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
                         {st.label}
                       </p>
                     </div>
-                    {isDisabled && (
+                    {isCurrent ? (
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
+                        Current Status
+                      </span>
+                    ) : isPast ? (
                       <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-600">
                         Completed
                       </span>
-                    )}
+                    ) : null}
                   </div>
                   <p className="text-xs text-secondary mt-0.5">{st.desc}</p>
                 </div>

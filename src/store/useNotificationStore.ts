@@ -70,8 +70,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   addNotification: (newNotif) => {
-    const newId = newNotif.id;
-    const newDocId = newNotif.documentId;
+    const payload = (newNotif as any)?.notification || (newNotif as any)?.data || newNotif;
+    const newId = payload?.id;
+    const newDocId = payload?.documentId;
 
     set((state) => {
       // Prevent duplicate notification entries with identical ID or documentId
@@ -86,12 +87,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       }
 
       const formattedItem: NotificationItem = {
-        id: newNotif.id || Date.now(),
-        documentId: newNotif.documentId || `doc_${Date.now()}`,
-        title: newNotif.title || "New Notification",
-        description: newNotif.description || "",
-        type: newNotif.type || "system",
-        createdAt: newNotif.createdAt || new Date().toISOString(),
+        id: payload?.id || Date.now(),
+        documentId: payload?.documentId || `doc_${Date.now()}`,
+        title: payload?.title || payload?.name || "New Notification",
+        description: payload?.description || payload?.message || "",
+        type: payload?.type || "system",
+        createdAt: payload?.createdAt || new Date().toISOString(),
         read: false,
       };
 

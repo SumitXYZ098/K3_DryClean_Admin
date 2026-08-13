@@ -81,6 +81,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               const isPast =
                 currentStatusIndex !== -1 && idx < currentStatusIndex;
               const isCurrent = order.status === st;
+              const isDisabled = isPast || isCurrent;
 
               return (
                 <div
@@ -89,16 +90,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 >
                   <button
                     type="button"
-                    disabled={isPast}
-                    onClick={() => !isPast && onUpdateStatus(order.id, st)}
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && onUpdateStatus(order.id, st)}
                     title={
-                      isPast
-                        ? `${stObj.label} (Completed)`
-                        : `Click to set status to ${stObj.label}`
+                      isCurrent
+                        ? `${stObj.label} (Current Status)`
+                        : isPast
+                          ? `${stObj.label} (Completed)`
+                          : `Click to set status to ${stObj.label}`
                     }
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isCurrent
-                        ? "bg-primary text-on-primary ring-4 ring-primary/20 scale-110 cursor-pointer"
+                        ? "bg-primary text-on-primary ring-4 ring-primary/20 scale-110 cursor-not-allowed"
                         : isPast
                           ? "bg-green-600/70 text-white cursor-not-allowed opacity-80"
                           : isPassed
@@ -257,6 +260,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <option value="Paid">Paid</option>
                 <option value="Unpaid">Unpaid</option>
                 <option value="Refunded">Refunded</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
           </div>

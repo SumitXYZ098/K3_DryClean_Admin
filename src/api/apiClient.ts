@@ -49,13 +49,6 @@ apiClient.interceptors.request.use(
       delete config.headers["Content-Type"];
     }
 
-    // if (import.meta.env.DEV) {
-    //   console.log(
-    //     `[API Request] ${config.method?.toUpperCase()} => ${config.url}`,
-    //     config.data || "",
-    //   );
-    // }
-
     return config;
   },
   (error: AxiosError) => {
@@ -74,12 +67,6 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // if (import.meta.env.DEV) {
-    //   console.log(
-    //     `[API Response] ${response.config.method?.toUpperCase()} <= ${response.config.url}`,
-    //     response.data,
-    //   );
-    // }
     return response;
   },
   (error: AxiosError<{ message?: string; error?: string }>) => {

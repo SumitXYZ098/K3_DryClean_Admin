@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback, useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import customerApi, {
   type CreateCustomerPayload,
   type CreateCustomerResponse,
@@ -14,18 +15,18 @@ import useLoadingStore from "../store/useLoadingStore";
 import useSnackbarStore from "../store/useSnackbarStore";
 import { connectSocket } from "../services/socketService";
 
+export const CUSTOMERS_QUERY_KEY = ["customers"];
+
 export const useCustomerHook = () => {
+  const queryClient = useQueryClient();
   const {
-    customers,
+    customers: storeCustomers,
     hasFetched,
     setCustomers,
     addCustomer: addCustomerToStore,
     toggleCustomerStatus: toggleCustomerStatusStore,
     deleteCustomer: deleteCustomerStore,
   } = useCustomerStore();
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const { showLoading, hideLoading } = useLoadingStore();
   const { showSnackbar } = useSnackbarStore();
@@ -35,89 +36,113 @@ export const useCustomerHook = () => {
     connectSocket();
   }, []);
 
+  // TanStack React Query - Get Data (Fetch Customers)
+  const {
+    data: queriedCustomers,
+    isLoading: isQueryLoading,
+    isFetching,
+    error: queryError,
+    refetch,
+  } = useQuery<Customer[]>({
+    queryKey: CUSTOMERS_QUERY_KEY,
+    queryFn: async () => {
+      const response: GetCustomerResponse = await customerApi.getCustomer();
+      const mappedCustomers = (response.data || []).map(
+        mapCustomerProfileToCustomer
+      );
+      setCustomers(mappedCustomers);
+      return mappedCustomers;
+    },
+    initialData: storeCustomers.length > 0 ? storeCustomers : undefined,
+  });
+
+  // Keep Zustand store in sync when query data updates
+  useEffect(() => {
+    if (queriedCustomers && queriedCustomers.length > 0) {
+      setCustomers(queriedCustomers);
+    }
+  }, [queriedCustomers, setCustomers]);
+
+  // Keep React Query cache in sync when storeCustomers changes (e.g. via Socket.IO events)
+  useEffect(() => {
+    if (storeCustomers && storeCustomers.length > 0) {
+      queryClient.setQueryData<Customer[]>(CUSTOMERS_QUERY_KEY, storeCustomers);
+    }
+  }, [storeCustomers, queryClient]);
+
   /**
-   * Fetch all customers from API
+   * Fetch all customers (Refetch Wrapper with backwards compatibility)
    * @param force - Optional boolean to force refetch from backend even if cached
    */
   const fetchCustomers = useCallback(
     async (force = false): Promise<Customer[]> => {
       const state = useCustomerStore.getState();
-
-      // Return cached customers if already fetched and not forced
       if (state.hasFetched && !force && state.customers.length > 0) {
         return state.customers;
       }
-
-      setIsLoading(true);
-      setError(null);
-
-      // Only display global loading overlay if no cached data exists
       if (state.customers.length === 0) {
         showLoading("Fetching customer directory...");
       }
-
       try {
-        const response: GetCustomerResponse = await customerApi.getCustomer();
-        const mappedCustomers = (response.data || []).map(
-          mapCustomerProfileToCustomer
-        );
-
-        setCustomers(mappedCustomers);
-        return mappedCustomers;
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch customer directory.";
-        setError(errMsg);
-        throw err;
+        const result = await refetch();
+        return result.data || state.customers;
       } finally {
-        setIsLoading(false);
         hideLoading();
       }
     },
-    [setCustomers, showLoading, hideLoading]
+    [refetch, showLoading, hideLoading]
   );
 
-  /**
-   * Create customer via API
-   * Payload: CreateCustomerPayload
-   */
-  const createCustomer = useCallback(
-    async (
-      payload: CreateCustomerPayload
-    ): Promise<{ response: CreateCustomerResponse; customer: Customer }> => {
-      setIsLoading(true);
-      setError(null);
+  // TanStack React Query - Post Data (Create Customer Mutation)
+  const createCustomerMutation = useMutation<
+    { response: CreateCustomerResponse; customer: Customer },
+    Error,
+    CreateCustomerPayload
+  >({
+    mutationFn: async (payload: CreateCustomerPayload) => {
       showLoading("Creating customer account...");
-
       try {
         const response: CreateCustomerResponse =
           await customerApi.createCustomer(payload);
         const mappedCustomer = mapCustomerProfileToCustomer(response.data);
-
-        // Add created customer to top of customer store array
-        setCustomers([mappedCustomer, ...customers]);
-
-        showSnackbar({
-          message: response.message || "Customer created successfully.",
-          type: "success",
-        });
-
         return { response, customer: mappedCustomer };
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to create customer. Please check the provided information.";
-        setError(errMsg);
-        throw err;
       } finally {
-        setIsLoading(false);
         hideLoading();
       }
     },
-    [customers, setCustomers, showLoading, hideLoading, showSnackbar]
+    onSuccess: ({ response, customer }) => {
+      const currentList = queryClient.getQueryData<Customer[]>(CUSTOMERS_QUERY_KEY) || storeCustomers;
+      const updatedList = [customer, ...currentList];
+      queryClient.setQueryData(CUSTOMERS_QUERY_KEY, updatedList);
+      setCustomers(updatedList);
+
+      showSnackbar({
+        message: response.message || "Customer created successfully.",
+        type: "success",
+      });
+
+      queryClient.invalidateQueries({ queryKey: CUSTOMERS_QUERY_KEY });
+    },
+    onError: (err: any) => {
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to create customer. Please check the provided information.";
+      showSnackbar({
+        message: errMsg,
+        type: "error",
+      });
+    },
+  });
+
+  /**
+   * Create customer via API (Wrapper calling React Query mutation)
+   */
+  const createCustomer = useCallback(
+    async (payload: CreateCustomerPayload) => {
+      return createCustomerMutation.mutateAsync(payload);
+    },
+    [createCustomerMutation]
   );
 
   /**
@@ -125,9 +150,11 @@ export const useCustomerHook = () => {
    */
   const addCustomer = useCallback(
     (data: Parameters<typeof addCustomerToStore>[0]) => {
-      return addCustomerToStore(data);
+      const newCustomer = addCustomerToStore(data);
+      queryClient.invalidateQueries({ queryKey: CUSTOMERS_QUERY_KEY });
+      return newCustomer;
     },
-    [addCustomerToStore]
+    [addCustomerToStore, queryClient]
   );
 
   /**
@@ -136,8 +163,17 @@ export const useCustomerHook = () => {
   const toggleCustomerStatus = useCallback(
     (id: string) => {
       toggleCustomerStatusStore(id);
+      queryClient.setQueryData<Customer[]>(CUSTOMERS_QUERY_KEY, (old) =>
+        old
+          ? old.map((c) =>
+              c.id === id
+                ? { ...c, status: c.status === "Active" ? "Suspended" : "Active" }
+                : c
+            )
+          : undefined
+      );
     },
-    [toggleCustomerStatusStore]
+    [toggleCustomerStatusStore, queryClient]
   );
 
   /**
@@ -146,20 +182,31 @@ export const useCustomerHook = () => {
   const deleteCustomer = useCallback(
     (id: string) => {
       deleteCustomerStore(id);
+      queryClient.setQueryData<Customer[]>(CUSTOMERS_QUERY_KEY, (old) =>
+        old ? old.filter((c) => c.id !== id) : undefined
+      );
     },
-    [deleteCustomerStore]
+    [deleteCustomerStore, queryClient]
   );
 
+  const activeCustomers = queriedCustomers || storeCustomers;
+  const errorMessage = queryError
+    ? (queryError as any).response?.data?.message || (queryError as Error).message || "Failed to fetch customer directory."
+    : null;
+
   return {
-    customers,
+    customers: activeCustomers,
     hasFetched,
-    isLoading,
-    error,
+    isLoading: isQueryLoading || isFetching || createCustomerMutation.isPending,
+    isFetching,
+    error: errorMessage,
+    refetch,
     fetchCustomers,
     createCustomer,
     addCustomer,
     toggleCustomerStatus,
     deleteCustomer,
+    createCustomerMutation,
   };
 };
 

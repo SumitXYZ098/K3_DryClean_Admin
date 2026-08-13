@@ -128,6 +128,7 @@ interface CustomerState {
     walletBalance?: number;
     preferredPaymentMethod?: "credit" | "cash" | "terms" | "digital";
   }) => Customer;
+  addCustomerProfileFromSocket: (profileData: CustomerProfileData) => void;
   toggleCustomerStatus: (id: string) => void;
   deleteCustomer: (id: string) => void;
 }
@@ -222,6 +223,20 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
     }));
 
     return newCustomer;
+  },
+
+  addCustomerProfileFromSocket: (profileData: CustomerProfileData) => {
+    const newCust = mapCustomerProfileToCustomer(profileData);
+    set((state) => {
+      const exists = state.customers.some(
+        (c) =>
+          (newCust.documentId && c.documentId === newCust.documentId) ||
+          c.id === newCust.id ||
+          (newCust.numericId && c.numericId === newCust.numericId),
+      );
+      if (exists) return state;
+      return { customers: [newCust, ...state.customers] };
+    });
   },
 
   toggleCustomerStatus: (id) =>

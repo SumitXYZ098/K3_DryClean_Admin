@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 import useAuthStore from "../store/useAuthStore";
 import useOrderStore from "../store/useOrderStore";
 import useNotificationStore from "../store/useNotificationStore";
+import useCustomerStore from "../store/useCustomerStore";
 
 const SERVER_URL =
   import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
@@ -17,15 +18,12 @@ export const getSocket = (): Socket | null => socket;
 const attachListeners = (s: Socket) => {
   // --- NOTIFICATION EVENT LISTENERS ---
   const handleNotification = (data: any) => {
-    console.log("[Socket.IO] Notification event received:", data);
+    // console.log("[Socket.IO] Notification event received:", data);
+    const payload = data?.notification || data?.data || data;
     if (notificationCallback) {
-      notificationCallback(data);
-    } else if (
-      data &&
-      typeof data === "object" &&
-      (data.title || data.id || data.documentId)
-    ) {
-      useNotificationStore.getState().addNotification(data);
+      notificationCallback(payload);
+    } else if (payload && typeof payload === "object") {
+      useNotificationStore.getState().addNotification(payload);
     } else {
       useNotificationStore
         .getState()
@@ -48,10 +46,17 @@ const attachListeners = (s: Socket) => {
 
   // --- ORDER EVENT LISTENERS ---
   const handleOrderChange = (data: any) => {
-    console.log("[Socket.IO] Order change event received:", data);
+    // console.log("[Socket.IO] Order change event received:", data);
     useOrderStore
       .getState()
       .fetchOrders(true)
+      .then((orders) => {
+        (orders || []).forEach((o) => {
+          if (o.documentId) {
+            joinOrderRoomSocket(o.documentId);
+          }
+        });
+      })
       .catch((err) => {
         console.error("[Socket.IO] Failed to auto-refresh orders:", err);
       });
@@ -61,14 +66,38 @@ const attachListeners = (s: Socket) => {
   };
 
   s.off("admin-orders");
+  s.off("order-created");
+  s.off("order-updated");
+  s.off("order-update-success");
   s.off("order-status-success");
   s.off("order-status-updated");
   s.off("order-update");
 
   s.on("admin-orders", handleOrderChange);
+  s.on("order-created", handleOrderChange);
+  s.on("order-updated", handleOrderChange);
+  s.on("order-update-success", handleOrderChange);
   s.on("order-status-success", handleOrderChange);
   s.on("order-status-updated", handleOrderChange);
   s.on("order-update", handleOrderChange);
+
+  // --- USER PROFILE EVENT LISTENERS ---
+  const handleUserProfileChange = (data: any) => {
+    console.log("[Socket.IO] User profile event received:", data);
+    const profile = data?.profile || data?.data || data;
+    if (profile && (profile.id || profile.documentId)) {
+      useCustomerStore.getState().addCustomerProfileFromSocket(profile);
+    }
+    useCustomerStore
+      .getState()
+      .fetchCustomers(true)
+      .catch((err) => {
+        console.error("[Socket.IO] Failed to auto-refresh customers:", err);
+      });
+  };
+
+  s.off("user-profile-created");
+  s.on("user-profile-created", handleUserProfileChange);
 };
 
 export const connectSocket = (
@@ -116,7 +145,7 @@ export const connectSocket = (
   });
 
   socket.on("connect", () => {
-    console.log("[Socket.IO] Connected. Socket ID:", socket?.id);
+    // console.log("[Socket.IO] Connected. Socket ID:", socket?.id);
     if (socket) {
       attachListeners(socket);
     }
@@ -173,7 +202,7 @@ export const updateOrderStatusSocket = ({
       pickupDriverDocumentId,
       deliveryDriverDocumentId,
     };
-    console.log("[Socket.IO] Emitting update-order", payload);
+    // console.log("[Socket.IO] Emitting update-order", payload);
     activeSocket.emit("update-order", payload);
   } else {
     console.error(
@@ -182,9 +211,38 @@ export const updateOrderStatusSocket = ({
   }
 };
 
+/**
+ * Emit join-order event over Socket.IO to join an order room
+ */
+export const joinOrderRoomSocket = (orderDocumentId: string) => {
+  const activeSocket = getSocket();
+  if (activeSocket && activeSocket.connected && orderDocumentId) {
+    activeSocket.emit("join-order", orderDocumentId);
+  }
+};
+
+/**
+ * Emit mark-order-paid event over Socket.IO for COD orders
+ */
+export const markOrderPaidSocket = (orderDocumentId: string) => {
+  let activeSocket = getSocket();
+  if (!activeSocket || !activeSocket.connected) {
+    activeSocket = connectSocket();
+  }
+
+  if (activeSocket) {
+    // console.log("[Socket.IO] Emitting mark-order-paid for:", orderDocumentId);
+    activeSocket.emit("mark-order-paid", { orderDocumentId });
+  } else {
+    console.error(
+      "[Socket.IO] Unable to emit mark-order-paid: Socket unavailable.",
+    );
+  }
+};
+
 export const disconnectSocket = () => {
   if (socket) {
-    console.log("[Socket.IO] Disconnecting socket...");
+    // console.log("[Socket.IO] Disconnecting socket...");
     socket.disconnect();
     socket = null;
   }

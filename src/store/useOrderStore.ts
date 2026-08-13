@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import orderApi, { mapApiOrderToOrder } from "../api/orderApi";
-import { updateOrderStatusSocket } from "../services/socketService";
+import {
+  updateOrderStatusSocket,
+  markOrderPaidSocket,
+} from "../services/socketService";
 
 export type OrderStatus =
   | "pending"
@@ -10,9 +13,16 @@ export type OrderStatus =
   | "processing"
   | "delivery_assigned"
   | "out_for_delivery"
-  | "delivered";
+  | "delivered"
+  | "cancelled";
 
-export type PaymentStatus = "Paid" | "Unpaid" | "Refunded";
+export type PaymentStatus =
+  | "Paid"
+  | "Unpaid"
+  | "Refunded"
+  | "cancelled"
+  | "Cancelled"
+  | "paid";
 
 export type ServiceType =
   | "Wash & Fold"
@@ -182,11 +192,23 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
   },
 
   updateOrderPaymentStatus: (id, paymentStatus) => {
+    const currentOrders = get().orders;
+    const targetOrder = currentOrders.find(
+      (o) => o.id === id || o.documentId === id,
+    );
+
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === id || o.documentId === id ? { ...o, paymentStatus } : o,
       ),
     }));
+
+    if (paymentStatus === "Paid" || paymentStatus === "paid") {
+      const docId = targetOrder?.documentId?.toString() || id;
+      if (docId) {
+        markOrderPaidSocket(docId);
+      }
+    }
   },
 
   assignDriver: (id, driver) => {
@@ -240,13 +262,6 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
         pickupDriverDocumentId: driver.id,
       });
     }
-
-    // Refetch orders to sync backend populated relations
-    // setTimeout(() => {
-    //   get()
-    //     .fetchOrders(true)
-    //     .catch(() => {});
-    // }, 10000);
   },
 
   deleteOrder: (id) => {

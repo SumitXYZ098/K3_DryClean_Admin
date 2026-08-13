@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import authApi, {
   type User,
   type UserRole,
@@ -19,6 +20,7 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import useAuthStore from "../store/useAuthStore";
 
 export const useAuthHook = () => {
+  const queryClient = useQueryClient();
   const {
     user,
     token,
@@ -31,197 +33,213 @@ export const useAuthHook = () => {
   } = useAuthStore();
 
   const [resetToken, setResetToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const { showLoading, hideLoading } = useLoadingStore();
   const { showSnackbar } = useSnackbarStore();
 
-  /**
-   * Login user
-   * Payload: { identifier: string, password: string, remember?: boolean }
-   * Persists logged user & token for 30 days if remember is true
-   */
-  const login = useCallback(
-    async (credentials: LoginPayload): Promise<LoginResponse> => {
-      setIsLoading(true);
-      setError(null);
+  // React Query - Login Mutation
+  const loginMutation = useMutation<LoginResponse, Error, LoginPayload>({
+    mutationFn: async (credentials: LoginPayload) => {
       showLoading("Authenticating...");
-
+      setError(null);
       try {
         const response = await authApi.login(credentials);
-        const jwtToken = response.jwt;
-        const userData = response.user;
-
-        if (jwtToken && userData) {
-          setAuth({
-            user: userData,
-            token: jwtToken,
-            remember: credentials.remember ?? false,
-          });
-        }
-
-        showSnackbar({
-          message: "Login successful! Welcome back.",
-          type: "success",
-        });
-
         return response;
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Login failed. Please check your credentials.";
-        setError(errMsg);
-        throw err;
       } finally {
-        setIsLoading(false);
         hideLoading();
       }
     },
-    [showLoading, hideLoading, showSnackbar, setAuth]
+    onSuccess: (response, credentials) => {
+      const jwtToken = response.jwt;
+      const userData = response.user;
+
+      if (jwtToken && userData) {
+        setAuth({
+          user: userData,
+          token: jwtToken,
+          remember: credentials.remember ?? false,
+        });
+      }
+
+      showSnackbar({
+        message: "Login successful! Welcome back.",
+        type: "success",
+      });
+    },
+    onError: (err: any) => {
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed. Please check your credentials.";
+      setError(errMsg);
+    },
+  });
+
+  const login = useCallback(
+    async (credentials: LoginPayload): Promise<LoginResponse> => {
+      return loginMutation.mutateAsync(credentials);
+    },
+    [loginMutation]
   );
 
-  /**
-   * Send forgot password OTP request
-   * Payload: { identifier: string }
-   */
+  // React Query - Forgot Password Mutation
+  const forgotPasswordMutation = useMutation<
+    ForgotPasswordResponse,
+    Error,
+    ForgotPasswordPayload
+  >({
+    mutationFn: async (payload: ForgotPasswordPayload) => {
+      showLoading("Sending verification code...");
+      setError(null);
+      try {
+        return await authApi.forgotPassword(payload);
+      } finally {
+        hideLoading();
+      }
+    },
+    onSuccess: (response, payload) => {
+      if (response.resetToken) {
+        setResetToken(response.resetToken);
+      }
+      showSnackbar({
+        message:
+          response.message || `OTP sent successfully to ${payload.identifier}.`,
+        type: "success",
+      });
+    },
+    onError: (err: any) => {
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to send reset OTP. Please try again.";
+      setError(errMsg);
+    },
+  });
+
   const forgotPassword = useCallback(
     async (payload: ForgotPasswordPayload): Promise<ForgotPasswordResponse> => {
-      setIsLoading(true);
+      return forgotPasswordMutation.mutateAsync(payload);
+    },
+    [forgotPasswordMutation]
+  );
+
+  // React Query - Resend OTP Mutation
+  const resendOtpMutation = useMutation<
+    ResendOtpResponse,
+    Error,
+    ResendOtpPayload
+  >({
+    mutationFn: async (payload: ResendOtpPayload) => {
+      showLoading("Resending OTP code...");
       setError(null);
-      showLoading("Sending verification code...");
-
       try {
-        const response = await authApi.forgotPassword(payload);
-        if (response.resetToken) {
-          setResetToken(response.resetToken);
-        }
-
-        showSnackbar({
-          message: response.message || `OTP sent successfully to ${payload.identifier}.`,
-          type: "success",
-        });
-        return response;
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to send reset OTP. Please try again.";
-        setError(errMsg);
-        throw err;
+        return await authApi.resendOtp(payload);
       } finally {
-        setIsLoading(false);
         hideLoading();
       }
     },
-    [showLoading, hideLoading, showSnackbar]
-  );
+    onSuccess: (response) => {
+      if (response.resetToken) {
+        setResetToken(response.resetToken);
+      }
+      showSnackbar({
+        message: response.message || "OTP resent successfully.",
+        type: "success",
+      });
+    },
+    onError: (err: any) => {
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to resend OTP. Please try again.";
+      setError(errMsg);
+    },
+  });
 
-  /**
-   * Resend password reset OTP
-   * Payload: { identifier: string, resetToken: string }
-   */
   const resendOtp = useCallback(
     async (payload: ResendOtpPayload): Promise<ResendOtpResponse> => {
-      setIsLoading(true);
+      return resendOtpMutation.mutateAsync(payload);
+    },
+    [resendOtpMutation]
+  );
+
+  // React Query - Verify OTP Mutation
+  const verifyOtpMutation = useMutation<
+    VerifyOtpResponse,
+    Error,
+    VerifyOtpPayload
+  >({
+    mutationFn: async (payload: VerifyOtpPayload) => {
+      showLoading("Verifying OTP code...");
       setError(null);
-      showLoading("Resending OTP code...");
-
       try {
-        const response = await authApi.resendOtp(payload);
-        if (response.resetToken) {
-          setResetToken(response.resetToken);
-        }
-
-        showSnackbar({
-          message: response.message || "OTP resent successfully.",
-          type: "success",
-        });
-        return response;
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to resend OTP. Please try again.";
-        setError(errMsg);
-        throw err;
+        return await authApi.verifyOtp(payload);
       } finally {
-        setIsLoading(false);
         hideLoading();
       }
     },
-    [showLoading, hideLoading, showSnackbar]
-  );
+    onSuccess: (response) => {
+      if (response.resetToken) {
+        setResetToken(response.resetToken);
+      }
+      showSnackbar({
+        message: response.message || "OTP verified successfully.",
+        type: "success",
+      });
+    },
+    onError: (err: any) => {
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Invalid or expired OTP code.";
+      setError(errMsg);
+    },
+  });
 
-  /**
-   * Verify OTP code
-   * Payload: { identifier: string, resetToken: string, otp: string }
-   */
   const verifyOtp = useCallback(
     async (payload: VerifyOtpPayload): Promise<VerifyOtpResponse> => {
-      setIsLoading(true);
-      setError(null);
-      showLoading("Verifying OTP code...");
-
-      try {
-        const response = await authApi.verifyOtp(payload);
-        if (response.resetToken) {
-          setResetToken(response.resetToken);
-        }
-
-        showSnackbar({
-          message: response.message || "OTP verified successfully.",
-          type: "success",
-        });
-        return response;
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Invalid or expired OTP code.";
-        setError(errMsg);
-        throw err;
-      } finally {
-        setIsLoading(false);
-        hideLoading();
-      }
+      return verifyOtpMutation.mutateAsync(payload);
     },
-    [showLoading, hideLoading, showSnackbar]
+    [verifyOtpMutation]
   );
 
-  /**
-   * Reset / Set new password
-   * Payload: { identifier: string, resetToken: string, password: string }
-   */
-  const resetPassword = useCallback(
-    async (payload: ResetPasswordPayload): Promise<ResetPasswordResponse> => {
-      setIsLoading(true);
-      setError(null);
+  // React Query - Reset Password Mutation
+  const resetPasswordMutation = useMutation<
+    ResetPasswordResponse,
+    Error,
+    ResetPasswordPayload
+  >({
+    mutationFn: async (payload: ResetPasswordPayload) => {
       showLoading("Resetting password...");
-
+      setError(null);
       try {
-        const response = await authApi.resetPassword(payload);
-
-        showSnackbar({
-          message: response.message || "Password reset successfully.",
-          type: "success",
-        });
-        setResetToken(null);
-        return response;
-      } catch (err: any) {
-        const errMsg =
-          err.response?.data?.message ||
-          err.message ||
-          "Password reset failed. Please try again.";
-        setError(errMsg);
-        throw err;
+        return await authApi.resetPassword(payload);
       } finally {
-        setIsLoading(false);
         hideLoading();
       }
     },
-    [showLoading, hideLoading, showSnackbar]
+    onSuccess: (response) => {
+      showSnackbar({
+        message: response.message || "Password reset successfully.",
+        type: "success",
+      });
+      setResetToken(null);
+    },
+    onError: (err: any) => {
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Password reset failed. Please try again.";
+      setError(errMsg);
+    },
+  });
+
+  const resetPassword = useCallback(
+    async (payload: ResetPasswordPayload): Promise<ResetPasswordResponse> => {
+      return resetPasswordMutation.mutateAsync(payload);
+    },
+    [resetPasswordMutation]
   );
 
   /**
@@ -230,11 +248,19 @@ export const useAuthHook = () => {
   const logout = useCallback(() => {
     clearAuth();
     setResetToken(null);
+    queryClient.clear();
     showSnackbar({
       message: "Logged out successfully.",
       type: "info",
     });
-  }, [clearAuth, showSnackbar]);
+  }, [clearAuth, showSnackbar, queryClient]);
+
+  const isLoading =
+    loginMutation.isPending ||
+    forgotPasswordMutation.isPending ||
+    resendOtpMutation.isPending ||
+    verifyOtpMutation.isPending ||
+    resetPasswordMutation.isPending;
 
   return {
     user,
@@ -252,6 +278,11 @@ export const useAuthHook = () => {
     resetPassword,
     logout,
     checkAuthExpiry,
+    loginMutation,
+    forgotPasswordMutation,
+    resendOtpMutation,
+    verifyOtpMutation,
+    resetPasswordMutation,
   };
 };
 

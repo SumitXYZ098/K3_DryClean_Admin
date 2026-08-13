@@ -20,6 +20,7 @@ export const OrderFilterTabs: React.FC<OrderFilterTabsProps> = ({
     { id: "delivery_assigned", label: "Delivery Assigned" },
     { id: "out_for_delivery", label: "Out for Delivery" },
     { id: "delivered", label: "Delivered" },
+    { id: "cancelled", label: "Cancelled" },
   ];
 
   return (

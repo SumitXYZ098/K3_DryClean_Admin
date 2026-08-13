@@ -3,7 +3,6 @@ import Drawer from "@mui/material/Drawer";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import type { NotificationItem } from "../../api/notificationApi";
-import { getSocket } from "../../services/socketService";
 
 dayjs.extend(relativeTime);
 
@@ -23,13 +22,10 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   onClose,
   notifications,
   unreadCount,
-  socketConnected,
   onNotificationClick,
   onMarkAllAsRead,
   onClearAll,
 }) => {
-  const isLive = socketConnected || !!getSocket()?.connected;
-
   // Format creation time using dayjs
   const formatTime = (dateString: string) => {
     if (!dateString) return "";
@@ -102,7 +98,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               <h3 className="font-headline-md text-lg text-on-surface font-bold">
                 Notifications
               </h3>
-              <div className="flex items-center gap-2 mt-0.5">
+              {/* <div className="flex items-center gap-2 mt-0.5">
                 <span
                   className={`w-2 h-2 rounded-full ${
                     isLive ? "bg-green-500 animate-pulse" : "bg-gray-400"
@@ -111,7 +107,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                 <span className="text-xs text-secondary font-medium">
                   {isLive ? "Real-time active" : "Offline"}
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
 

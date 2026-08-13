@@ -6,7 +6,7 @@ import OrderStatusChart from "../../components/dashboard/OrderStatusChart";
 import LatestOrdersTable from "../../components/dashboard/LatestOrdersTable";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import useHeaderStore from "../../store/useHeaderStore";
-import useDashboardStore from "../../store/useDashboardStore";
+import useDashboardHook from "../../hooks/useDashboardHook";
 import { useNavigate } from "react-router";
 
 export const DashboardPage: React.FC = () => {
@@ -19,24 +19,9 @@ export const DashboardPage: React.FC = () => {
     revenueData,
     serviceStatsData,
     isLoading: isDashboardLoading,
-    fetchDashboardData,
-  } = useDashboardStore();
+  } = useDashboardHook();
 
   const formattedDate = dayjs().format("dddd, MMM D, YYYY");
-
-  useEffect(() => {
-    // Initial fetch (only triggers skeleton loader if not previously fetched)
-    fetchDashboardData();
-
-    // Background silent auto-refetch every 5 minutes (300,000 ms)
-    const interval = setInterval(() => {
-      fetchDashboardData(true);
-    }, 10000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [fetchDashboardData]);
 
   useEffect(() => {
     setCustomActionHandler(() => {
