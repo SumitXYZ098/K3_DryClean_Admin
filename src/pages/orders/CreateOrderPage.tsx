@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import useOrderStore from "../../store/useOrderStore";
 import useCustomerStore from "../../store/useCustomerStore";
@@ -19,12 +19,25 @@ import LogisticsSection, {
 import OrderSummaryCard from "../../components/orders/create/OrderSummaryCard";
 import StaffInstructionsCard from "../../components/orders/create/StaffInstructionsCard";
 import DeliveryMapCard from "../../components/orders/create/DeliveryMapCard";
+import useHeaderStore from "../../store/useHeaderStore";
 
 export const CreateOrderPage: React.FC = () => {
+  const { setCustomActionHandler } = useHeaderStore();
   const navigate = useNavigate();
   const { addOrder } = useOrderStore();
   const { addCustomer } = useCustomerStore();
   const { showSnackbar } = useSnackbarStore();
+
+  // Sync custom header button with Create New Order page
+  useEffect(() => {
+    setCustomActionHandler(() => {
+      navigate("/orders/create");
+    });
+
+    return () => {
+      setCustomActionHandler(null);
+    };
+  }, [setCustomActionHandler, navigate]);
 
   // Form State
   const [customerDetails, setCustomerDetails] = useState<CustomerDetailsData>({
@@ -194,16 +207,6 @@ export const CreateOrderPage: React.FC = () => {
     }, 1000);
   };
 
-  const handleSaveDraft = () => {
-    showSnackbar({
-      message: "Order draft saved to local system",
-      type: "info",
-    });
-    setTimeout(() => {
-      navigate("/orders");
-    }, 600);
-  };
-
   const handleChangePaymentMethod = () => {
     const nextMethod = paymentMethod.includes("Default")
       ? "Credit Card (Ending in 4092)"
@@ -236,13 +239,6 @@ export const CreateOrderPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            className="px-lg py-2 rounded-lg border border-outline text-on-surface font-semibold hover:bg-surface-container-high transition-colors cursor-pointer"
-          >
-            Save Draft
-          </button>
           <button
             type="button"
             disabled={isConfirming}
@@ -290,7 +286,6 @@ export const CreateOrderPage: React.FC = () => {
               paymentMethod={paymentMethod}
               isConfirming={isConfirming}
               onConfirmOrder={handleConfirmOrder}
-              onSaveDraft={handleSaveDraft}
               onChangePaymentMethod={handleChangePaymentMethod}
             />
 

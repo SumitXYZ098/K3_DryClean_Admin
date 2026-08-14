@@ -24,7 +24,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   unreadCount,
   onNotificationClick,
   onMarkAllAsRead,
-  onClearAll,
+  // onClearAll,
 }) => {
   // Format creation time using dayjs
   const formatTime = (dateString: string) => {
@@ -218,7 +218,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               Total {notifications.length} notification
               {notifications.length > 1 ? "s" : ""}
             </span>
-            {onClearAll && (
+            {/* {onClearAll && (
               <button
                 type="button"
                 onClick={onClearAll}
@@ -226,7 +226,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               >
                 Clear all
               </button>
-            )}
+            )} */}
           </div>
         )}
       </div>

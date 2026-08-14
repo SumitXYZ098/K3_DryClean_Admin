@@ -23,6 +23,9 @@ export const ENDPOINTS = {
 
   // notification endpoints
   getAllNotification: `${BASE_URL}/api/notifications`,
+  getMarkAllNotificationsAsRead: `${BASE_URL}/api/notifications/mark-all-read`,
+  getMarkNotificationAsRead: (docId: string) =>
+    `${BASE_URL}/api/notifications/${docId}/read`,
 
   // driver endpoints
   getAllDriver: `${BASE_URL}/api/driver-details`,

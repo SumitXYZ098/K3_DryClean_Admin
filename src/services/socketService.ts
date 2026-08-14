@@ -9,9 +9,9 @@ const SERVER_URL =
   import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
 
 let socket: Socket | null = null;
-let notificationCallback: ((data: any) => void) | null = null;
-let orderStatusCallback: ((data: any) => void) | null = null;
-let statusChangeCallback: ((isConnected: boolean) => void) | null = null;
+const notificationCallbacks = new Set<(data: any) => void>();
+const orderStatusCallbacks = new Set<(data: any) => void>();
+const statusChangeCallbacks = new Set<(isConnected: boolean) => void>();
 
 export const getSocket = (): Socket | null => socket;
 
@@ -20,8 +20,8 @@ const attachListeners = (s: Socket) => {
   const handleNotification = (data: any) => {
     // console.log("[Socket.IO] Notification event received:", data);
     const payload = data?.notification || data?.data || data;
-    if (notificationCallback) {
-      notificationCallback(payload);
+    if (notificationCallbacks.size > 0) {
+      notificationCallbacks.forEach((cb) => cb(payload));
     } else if (payload && typeof payload === "object") {
       useNotificationStore.getState().addNotification(payload);
     } else {
@@ -47,21 +47,22 @@ const attachListeners = (s: Socket) => {
   // --- ORDER EVENT LISTENERS ---
   const handleOrderChange = (data: any) => {
     // console.log("[Socket.IO] Order change event received:", data);
-    useOrderStore
-      .getState()
-      .fetchOrders(true)
-      .then((orders) => {
-        (orders || []).forEach((o) => {
-          if (o.documentId) {
-            joinOrderRoomSocket(o.documentId);
-          }
+    if (orderStatusCallbacks.size > 0) {
+      orderStatusCallbacks.forEach((cb) => cb(data));
+    } else {
+      useOrderStore
+        .getState()
+        .fetchOrders(true)
+        .then((orders) => {
+          (orders || []).forEach((o) => {
+            if (o.documentId) {
+              joinOrderRoomSocket(o.documentId);
+            }
+          });
+        })
+        .catch((err) => {
+          console.error("[Socket.IO] Failed to auto-refresh orders:", err);
         });
-      })
-      .catch((err) => {
-        console.error("[Socket.IO] Failed to auto-refresh orders:", err);
-      });
-    if (orderStatusCallback) {
-      orderStatusCallback(data);
     }
   };
 
@@ -105,9 +106,9 @@ export const connectSocket = (
   onStatusChange?: (isConnected: boolean) => void,
   onOrderStatusChange?: (data: any) => void,
 ) => {
-  if (onNotificationReceived) notificationCallback = onNotificationReceived;
-  if (onStatusChange) statusChangeCallback = onStatusChange;
-  if (onOrderStatusChange) orderStatusCallback = onOrderStatusChange;
+  if (onNotificationReceived) notificationCallbacks.add(onNotificationReceived);
+  if (onStatusChange) statusChangeCallbacks.add(onStatusChange);
+  if (onOrderStatusChange) orderStatusCallbacks.add(onOrderStatusChange);
 
   const token =
     useAuthStore.getState().getToken() ||
@@ -118,13 +119,13 @@ export const connectSocket = (
 
   if (!token) {
     console.warn("[Socket.IO] Cannot connect: Authentication token missing.");
-    if (statusChangeCallback) statusChangeCallback(false);
+    statusChangeCallbacks.forEach((cb) => cb(false));
     return null;
   }
 
   // If socket is already active and connected
   if (socket && socket.connected) {
-    if (statusChangeCallback) statusChangeCallback(true);
+    statusChangeCallbacks.forEach((cb) => cb(true));
     attachListeners(socket);
     return socket;
   }
@@ -149,12 +150,12 @@ export const connectSocket = (
     if (socket) {
       attachListeners(socket);
     }
-    if (statusChangeCallback) statusChangeCallback(true);
+    statusChangeCallbacks.forEach((cb) => cb(true));
   });
 
   socket.on("socket-authenticated", (data) => {
     console.log("[Socket.IO] Socket authenticated successfully:", data);
-    if (statusChangeCallback) statusChangeCallback(true);
+    statusChangeCallbacks.forEach((cb) => cb(true));
   });
 
   attachListeners(socket);
@@ -165,12 +166,12 @@ export const connectSocket = (
 
   socket.on("socket-error", (err) => {
     console.error("[Socket.IO] Authentication or server error:", err);
-    if (statusChangeCallback) statusChangeCallback(false);
+    statusChangeCallbacks.forEach((cb) => cb(false));
   });
 
   socket.on("disconnect", (reason) => {
     console.warn("[Socket.IO] Disconnected. Reason:", reason);
-    if (statusChangeCallback) statusChangeCallback(false);
+    statusChangeCallbacks.forEach((cb) => cb(false));
   });
 
   return socket;

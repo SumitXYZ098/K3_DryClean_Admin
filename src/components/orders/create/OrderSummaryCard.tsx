@@ -10,7 +10,6 @@ export interface OrderSummaryCardProps {
   paymentMethod: string;
   isConfirming: boolean;
   onConfirmOrder: () => void;
-  onSaveDraft: () => void;
   onChangePaymentMethod?: () => void;
 }
 
@@ -24,7 +23,6 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   paymentMethod,
   isConfirming,
   onConfirmOrder,
-  onSaveDraft,
   onChangePaymentMethod,
 }) => {
   return (
@@ -99,13 +97,6 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                 </span>
               </>
             )}
-          </button>
-          <button
-            type="button"
-            onClick={onSaveDraft}
-            className="w-full py-3 rounded-lg border border-outline text-on-surface font-semibold hover:bg-surface-container-high transition-colors cursor-pointer"
-          >
-            Save as Draft
           </button>
         </div>
       </div>

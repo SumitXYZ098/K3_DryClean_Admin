@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
-import notificationApi, { type NotificationItem } from "../api/notificationApi";
+import notificationApi, {
+  type NotificationItem,
+  isNotificationReadForUser,
+} from "../api/notificationApi";
+import useAuthStore from "./useAuthStore";
 import {
   connectSocket as connectSocketService,
   disconnectSocket as disconnectSocketService,
@@ -39,16 +43,24 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const response = await notificationApi.getAllNotifications();
       const rawData = response.data || [];
 
-      // Add default unread state if missing
+      const currentUser = useAuthStore.getState().user;
+      const userDocId = currentUser?.documentId;
+      const userId = currentUser?.id;
+
+      // Add default unread state if missing or match with notification_readers
       const formatted: NotificationItem[] = rawData
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
-        .map((item) => ({
-          ...item,
-          read: item.read ?? false,
-        }));
+        .map((item) => {
+          const isRead = isNotificationReadForUser(item, userDocId, userId);
+          return {
+            ...item,
+            read: isRead,
+            isRead,
+          };
+        });
 
       const unread = formatted.filter((item) => !item.read).length;
 
@@ -108,9 +120,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
       unreadCount: 0,
     }));
+    notificationApi.markAllNotificationsAsRead().catch((err) => {
+      console.error(
+        "[Notification] Failed to mark all notifications as read:",
+        err,
+      );
+    });
   },
 
   markAsRead: (id) => {
+    const target = get().notifications.find(
+      (n) => n.id === id || n.documentId === id,
+    );
+    const docId = target?.documentId || String(id);
+
     set((state) => {
       const updated = state.notifications.map((n) =>
         n.id === id || n.documentId === id ? { ...n, read: true } : n,
@@ -118,6 +141,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const unread = updated.filter((n) => !n.read).length;
       return { notifications: updated, unreadCount: unread };
     });
+
+    if (docId) {
+      notificationApi.markNotificationAsRead(docId).catch((err) => {
+        console.error(
+          `[Notification] Failed to mark notification ${docId} as read:`,
+          err,
+        );
+      });
+    }
   },
 
   clearNotifications: () => {

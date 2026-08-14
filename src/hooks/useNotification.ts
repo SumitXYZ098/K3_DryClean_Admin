@@ -5,7 +5,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useNotificationStore, {
   type NotificationState,
 } from "../store/useNotificationStore";
-import notificationApi, { type NotificationItem } from "../api/notificationApi";
+import notificationApi, {
+  type NotificationItem,
+  isNotificationReadForUser,
+} from "../api/notificationApi";
+import useAuthStore from "../store/useAuthStore";
 
 export const NOTIFICATIONS_QUERY_KEY = ["notifications"];
 
@@ -39,15 +43,25 @@ export const useNotification = () => {
     queryFn: async () => {
       const response = await notificationApi.getAllNotifications();
       const rawData = response.data || [];
+
+      const currentUser = useAuthStore.getState().user;
+      const userDocId = currentUser?.documentId;
+      const userId = currentUser?.id;
+
       const formatted: NotificationItem[] = rawData
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
-        .map((item) => ({
-          ...item,
-          read: item.read ?? false,
-        }));
+        .map((item) => {
+          const isRead = isNotificationReadForUser(item, userDocId, userId);
+          return {
+            ...item,
+            read: isRead,
+            isRead,
+          };
+        });
+
       useNotificationStore.setState({
         notifications: formatted,
         unreadCount: formatted.filter((n) => !n.read).length,

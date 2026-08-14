@@ -150,20 +150,9 @@ export const useOrders = () => {
 
   const updateOrderStatus = useCallback(
     (id: string, newStatus: OrderStatus) => {
-      // Instant cache update
-      queryClient.setQueryData<Order[]>(ORDERS_QUERY_KEY, (old) =>
-        old
-          ? old.map((o) =>
-              o.id === id || o.documentId === id
-                ? { ...o, status: newStatus }
-                : o,
-            )
-          : undefined,
-      );
-      updateOrderStatusStore(id, newStatus);
       updateOrderStatusMutation.mutate({ id, newStatus });
     },
-    [updateOrderStatusMutation, updateOrderStatusStore, queryClient],
+    [updateOrderStatusMutation],
   );
 
   // Update order payment status mutation with instant cache update
@@ -187,21 +176,9 @@ export const useOrders = () => {
 
   const updateOrderPaymentStatus = useCallback(
     (id: string, paymentStatus: PaymentStatus) => {
-      queryClient.setQueryData<Order[]>(ORDERS_QUERY_KEY, (old) =>
-        old
-          ? old.map((o) =>
-              o.id === id || o.documentId === id ? { ...o, paymentStatus } : o,
-            )
-          : undefined,
-      );
-      updateOrderPaymentStatusStore(id, paymentStatus);
       updateOrderPaymentStatusMutation.mutate({ id, paymentStatus });
     },
-    [
-      updateOrderPaymentStatusMutation,
-      updateOrderPaymentStatusStore,
-      queryClient,
-    ],
+    [updateOrderPaymentStatusMutation],
   );
 
   // Assign driver mutation with INSTANT UI cache update
@@ -256,49 +233,9 @@ export const useOrders = () => {
 
   const assignDriver = useCallback(
     (id: string, driver: DriverInfo) => {
-      const currentList =
-        queryClient.getQueryData<Order[]>(ORDERS_QUERY_KEY) || storeOrders;
-      const targetOrder = currentList.find(
-        (o) => o.id === id || o.documentId === id,
-      );
-
-      const currentStatus = targetOrder?.status;
-      let newStatus: OrderStatus | undefined = currentStatus;
-      let isDeliveryPhase = false;
-
-      if (currentStatus === "pending" || currentStatus === "pickup_assigned") {
-        newStatus = "pickup_assigned";
-        isDeliveryPhase = false;
-      } else if (
-        currentStatus === "processing" ||
-        currentStatus === "delivery_assigned" ||
-        currentStatus === "out_for_delivery"
-      ) {
-        newStatus = "delivery_assigned";
-        isDeliveryPhase = true;
-      }
-
-      const updatedPerson = isDeliveryPhase
-        ? { deliveryPerson: driver }
-        : { pickupPerson: driver };
-
-      // Synchronous instant update to React Query cache
-      queryClient.setQueryData<Order[]>(ORDERS_QUERY_KEY, (old) =>
-        old
-          ? old.map((o) =>
-              o.id === id || o.documentId === id
-                ? { ...o, ...updatedPerson, status: newStatus || o.status }
-                : o,
-            )
-          : undefined,
-      );
-
-      // Synchronous instant update to Zustand store
-      assignDriverStore(id, driver);
-
       assignDriverMutation.mutate({ id, driver });
     },
-    [assignDriverMutation, assignDriverStore, queryClient, storeOrders],
+    [assignDriverMutation],
   );
 
   // Delete order mutation with instant cache update
@@ -314,13 +251,9 @@ export const useOrders = () => {
 
   const deleteOrder = useCallback(
     (id: string) => {
-      queryClient.setQueryData<Order[]>(ORDERS_QUERY_KEY, (old) =>
-        old ? old.filter((o) => o.id !== id && o.documentId !== id) : undefined,
-      );
-      deleteOrderStore(id);
       deleteOrderMutation.mutate(id);
     },
-    [deleteOrderMutation, deleteOrderStore, queryClient],
+    [deleteOrderMutation],
   );
 
   const activeOrders = queriedOrders || storeOrders;
