@@ -1,26 +1,63 @@
 import type React from "react";
+import type { CustomerAddress } from "../../../api/customerApi";
 
 export interface DeliveryMapCardProps {
   address?: string;
+  selectedAddressObj?: CustomerAddress | null;
 }
 
 export const DeliveryMapCard: React.FC<DeliveryMapCardProps> = ({
-  address = "452 Broadway, NY",
+  address = "",
+  selectedAddressObj,
 }) => {
+  const fullAddress =
+    selectedAddressObj?.fullAddress ||
+    [
+      selectedAddressObj?.streetAddress,
+      selectedAddressObj?.city,
+      selectedAddressObj?.state,
+      selectedAddressObj?.postalCode,
+      selectedAddressObj?.country,
+    ]
+      .filter(Boolean)
+      .join(", ") ||
+    address;
+
+  const addressType = selectedAddressObj?.addressType || "Delivery";
+  const landmark = selectedAddressObj?.landmark;
+
   return (
-    <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden h-40 group relative shadow-xs">
-      <img
-        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfp2s0T-YpfQaZ-GSIPDm32FwPqVAuYtmNyAYGg6tuABT-smvyBfKt9bQhohmHB2bVpUokSWtUG--pGNwODIoF1Yiq7Je_tjrHFCXfMn0plq3zd8WbsPibdi28smZHsfCUEEns3tfLVCLDMhViU09znnWOLxZFnzGAxZCZD6ImrBjEavDXNEzzXQAei4egT49X_UDRsXLl0Pa5l6uCpiOgO4VCuptm5eIYO-3W7-qpaOdH3m57ZvFuAA"
-        alt="Delivery Route Map"
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4">
-        <p className="text-white text-xs font-bold flex items-center gap-1.5 truncate">
-          <span className="material-symbols-outlined text-xs text-primary">
+    <div className="bg-surface border border-outline-variant rounded-xl p-lg shadow-xs space-y-md relative overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-sm border-b border-outline-variant">
+        <div className="flex items-center gap-2 text-primary font-bold text-sm">
+          <span className="material-symbols-outlined text-lg">
             location_on
           </span>
-          Delivery: {address}
+          <span>Delivery Address</span>
+        </div>
+
+        {fullAddress ? (
+          <span className="text-xs uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            {addressType}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Address Content Box */}
+      <div className="bg-surface-container-low p-4 rounded-lg border border-outline-variant/60 space-y-2">
+        <p className="text-sm font-semibold text-on-surface leading-relaxed">
+          {fullAddress || "No delivery address selected"}
         </p>
+
+        {landmark && (
+          <p className="text-xs text-secondary flex items-center gap-1.5 pt-1 border-t border-outline-variant/40">
+            <span className="material-symbols-outlined text-xs text-primary">
+              flag
+            </span>
+            <span className="font-semibold">Landmark:</span> {landmark}
+          </p>
+        )}
       </div>
     </div>
   );

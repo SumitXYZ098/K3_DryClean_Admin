@@ -3,8 +3,7 @@ import type React from "react";
 export interface OrderSummaryCardProps {
   itemCount: number;
   subtotal: number;
-  tax: number;
-  expressFee: number;
+  tax?: number;
   deliveryFee: number;
   total: number;
   paymentMethod: string;
@@ -16,8 +15,6 @@ export interface OrderSummaryCardProps {
 export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
   itemCount,
   subtotal,
-  tax,
-  expressFee,
   deliveryFee,
   total,
   paymentMethod,
@@ -43,20 +40,6 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
           </span>
         </div>
         <div className="flex justify-between text-body-md text-secondary">
-          <span>Service Tax (8%)</span>
-          <span className="font-medium text-on-surface">₹{tax.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-body-md text-secondary">
-          <span>Express Fee</span>
-          <span
-            className={`font-medium ${
-              expressFee > 0 ? "text-primary font-bold" : "text-on-surface"
-            }`}
-          >
-            ₹{expressFee.toFixed(2)}
-          </span>
-        </div>
-        <div className="flex justify-between text-body-md text-secondary">
           <span>Delivery Fee</span>
           <span className="text-primary font-bold uppercase text-xs tracking-wider">
             {deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}
@@ -67,10 +50,10 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
       {/* Total Amount & Action Buttons */}
       <div className="pt-4 border-t border-outline-variant border-dashed">
         <div className="flex justify-between items-baseline mb-6">
-          <span className="text-sm font-bold uppercase tracking-wider text-secondary">
+          <span className="text-xs font-bold uppercase tracking-wider text-secondary">
             Total Amount
           </span>
-          <span className="text-3xl font-bold text-primary">
+          <span className="text-2xl font-bold text-primary">
             ₹{total.toFixed(2)}
           </span>
         </div>
@@ -110,13 +93,15 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
           <p className="text-xs font-bold text-on-surface">Payment Method</p>
           <p className="text-xs text-secondary truncate">{paymentMethod}</p>
         </div>
-        <button
-          type="button"
-          onClick={onChangePaymentMethod}
-          className="text-primary text-xs font-bold hover:underline cursor-pointer"
-        >
-          Edit
-        </button>
+        {onChangePaymentMethod && (
+          <button
+            type="button"
+            onClick={onChangePaymentMethod}
+            className="text-primary text-xs font-bold hover:underline cursor-pointer"
+          >
+            Edit
+          </button>
+        )}
       </div>
     </div>
   );

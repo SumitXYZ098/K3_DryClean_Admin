@@ -71,6 +71,7 @@ export interface Order {
   pickupPerson: DriverInfo | null;
   deliveryPerson: DriverInfo | null;
   paymentStatus: PaymentStatus;
+  expressDelivery?: boolean;
   status: OrderStatus;
   serviceType: ServiceType;
   totalAmount: number;

@@ -115,17 +115,29 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
       className={`transition-colors group capitalize ${
         isCancelled
           ? "opacity-50 bg-gray-100/70 pointer-events-none select-none"
-          : "hover:bg-primary-container/5"
+          : order.expressDelivery
+            ? "bg-amber-500/5 hover:bg-amber-500/10 border-l-4 border-l-amber-500"
+            : "hover:bg-primary-container/5"
       }`}
     >
-      {/* Order ID */}
+      {/* Order ID & Express Badge */}
       <td
         className={`px-lg py-4 font-bold text-primary ${
           isCancelled ? " text-gray-500" : "cursor-pointer hover:underline"
         }`}
         onClick={() => !isCancelled && onViewDetails(order)}
       >
-        <span className="text-xs">{order.id}</span>
+        <div className="flex items-center gap-2 ">
+          <span className="text-xs">{order.id}</span>
+          {/* {order.expressDelivery && (
+            <span className="hover:no-underline inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold shadow-xs whitespace-nowrap">
+              <span className="material-symbols-outlined text-[12px]">
+                bolt
+              </span>
+              Express
+            </span>
+          )} */}
+        </div>
       </td>
 
       {/* Customer Info */}

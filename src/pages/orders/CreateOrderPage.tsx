@@ -3,15 +3,19 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import useOrderStore from "../../store/useOrderStore";
-import useCustomerStore from "../../store/useCustomerStore";
 import useSnackbarStore from "../../store/useSnackbarStore";
 
+import dayjs from "dayjs";
+import orderApi, {
+  type CreateOrderApiPayload,
+  type CreateOrderItemPayload,
+  type ServiceWithVariants,
+} from "../../api/orderApi";
 import CustomerDetailsSection, {
   type CustomerDetailsData,
 } from "../../components/orders/create/CustomerDetailsSection";
 import ServiceSelectionSection, {
   type SelectedServiceItem,
-  itemPrices,
 } from "../../components/orders/create/ServiceSelectionSection";
 import LogisticsSection, {
   type LogisticsData,
@@ -25,8 +29,23 @@ export const CreateOrderPage: React.FC = () => {
   const { setCustomActionHandler } = useHeaderStore();
   const navigate = useNavigate();
   const { addOrder } = useOrderStore();
-  const { addCustomer } = useCustomerStore();
   const { showSnackbar } = useSnackbarStore();
+
+  const [availableServices, setAvailableServices] = useState<ServiceWithVariants[]>([]);
+
+  // Auto-fetch services catalog for documentId mapping
+  useEffect(() => {
+    orderApi
+      .getServicesWithVariants()
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          setAvailableServices(res.data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch services list for payload mapping", err);
+      });
+  }, []);
 
   // Sync custom header button with Create New Order page
   useEffect(() => {
@@ -42,51 +61,66 @@ export const CreateOrderPage: React.FC = () => {
   // Form State
   const [customerDetails, setCustomerDetails] = useState<CustomerDetailsData>({
     isNewCustomer: false,
-    fullName: "Mark Thompson",
-    phone: "+1 (555) 012-3456",
-    email: "m.thompson@enterprise.com",
+    fullName: "",
+    phone: "",
+    email: "",
   });
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
-  const [items, setItems] = useState<SelectedServiceItem[]>([
-    {
-      id: "1",
-      serviceType: "Dry Cleaning",
-      itemName: "Suit (2-piece)",
-      quantity: 2,
-      unitPrice: 18.5,
-    },
-    {
-      id: "2",
-      serviceType: "Laundry",
-      itemName: "Dress Shirt",
-      quantity: 5,
-      unitPrice: 4.0,
-    },
-  ]);
+  const [items, setItems] = useState<SelectedServiceItem[]>([]);
+
+  const currentHour = dayjs().hour();
+  const allSlotsPassedToday = currentHour >= 16;
+  const initialPickupDate = allSlotsPassedToday
+    ? dayjs().add(1, "day").format("YYYY-MM-DD")
+    : dayjs().format("YYYY-MM-DD");
+  const initialDeliveryDate = dayjs(initialPickupDate)
+    .add(2, "day")
+    .format("YYYY-MM-DD");
 
   const [logistics, setLogistics] = useState<LogisticsData>({
-    pickupDate: "2023-11-24",
-    pickupTimeSlot: "14:00 - 16:00",
-    deliveryDate: "2023-11-27",
+    pickupDate: initialPickupDate,
+    pickupTimeSlot: "09:00 - 11:00",
+    deliveryDate: initialDeliveryDate,
     deliveryTimeSlot: "09:00 - 11:00",
     isExpress: false,
   });
 
-  const [staffInstructions, setStaffInstructions] = useState(
-    "Handle silk items with care, extra starch for white shirts...",
-  );
+  const [staffInstructions, setStaffInstructions] = useState("");
 
-  const [paymentMethod, setPaymentMethod] = useState(
-    "Pay on Delivery (Default)",
-  );
+  // Payment is fixed to Pay on Delivery
+  const paymentMethod = "Pay on Delivery";
   const [isConfirming, setIsConfirming] = useState(false);
 
   // Handlers
   const handleCustomerDetailsChange = (
     field: keyof CustomerDetailsData,
-    value: boolean | string,
+    value: any,
   ) => {
     setCustomerDetails((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectCustomer = (customer: any) => {
+    setCustomerDetails((prev) => ({
+      ...prev,
+      fullName: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      selectedCustomerId: customer.documentId || customer.id,
+    }));
+    showSnackbar({
+      message: `Selected customer: ${customer.name}`,
+      type: "success",
+    });
+  };
+
+  const handleSelectAddress = (addressObj: any, addressStr: string) => {
+    setCustomerDetails((prev) => ({
+      ...prev,
+      selectedAddressObj: addressObj,
+      address: addressStr,
+    }));
+    setDeliveryAddress(addressStr);
   };
 
   const handleLogisticsChange = (
@@ -96,26 +130,29 @@ export const CreateOrderPage: React.FC = () => {
     setLogistics((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddServiceItem = () => {
-    const newItemName = "Cotton Trousers";
+  const handleAddServiceItem = (
+    defaultService = "dry cleaning",
+    defaultItem = "T-shirt",
+    defaultPrice = 89,
+    serviceDocumentId?: string,
+    variantDocumentId?: string,
+  ) => {
     const newItem: SelectedServiceItem = {
       id: Date.now().toString(),
-      serviceType: "Dry Cleaning",
-      itemName: newItemName,
+      serviceType: defaultService,
+      itemName: defaultItem,
       quantity: 1,
-      unitPrice: itemPrices[newItemName] || 7.5,
+      unitPrice: defaultPrice,
+      serviceDocumentId,
+      variantDocumentId,
     };
     setItems((prev) => [...prev, newItem]);
-    showSnackbar({
-      message: "Added new service row to order",
-      type: "info",
-    });
   };
 
   const handleUpdateServiceItem = (
     id: string,
     field: keyof SelectedServiceItem,
-    value: string | number,
+    value: string | number | boolean,
   ) => {
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
@@ -123,25 +160,33 @@ export const CreateOrderPage: React.FC = () => {
   };
 
   const handleDeleteServiceItem = (id: string) => {
-    if (items.length <= 1) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   // Calculations
   const itemCount = items.reduce((acc, curr) => acc + curr.quantity, 0);
   const subtotal = items.reduce(
-    (acc, curr) => acc + curr.quantity * curr.unitPrice,
+    (acc, curr) =>
+      acc +
+      curr.quantity * (curr.unitPrice + (curr.isExpressDelivery ? 50 : 0)),
     0,
   );
-  const tax = subtotal * 0.08;
-  const expressFee = logistics.isExpress ? 15.0 : 0.0;
   const deliveryFee = 0.0;
-  const totalAmount = subtotal + tax + expressFee + deliveryFee;
+  const totalAmount = subtotal + deliveryFee;
 
-  const handleConfirmOrder = () => {
-    if (!customerDetails.fullName.trim()) {
+  const formatSlotToTime = (slot: string): string => {
+    if (!slot) return "09:00:00";
+    const startStr = slot.split("-")[0]?.trim() || "09:00";
+    if (startStr.length === 5) {
+      return `${startStr}:00`;
+    }
+    return startStr;
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!customerDetails.selectedCustomerId && !customerDetails.fullName.trim()) {
       showSnackbar({
-        message: "Customer Full Name is required.",
+        message: "Please search and select a customer before confirming order.",
         type: "error",
       });
       return;
@@ -153,27 +198,81 @@ export const CreateOrderPage: React.FC = () => {
       });
       return;
     }
+    if (items.length === 0) {
+      showSnackbar({
+        message: "Please add at least one service item to the order.",
+        type: "error",
+      });
+      return;
+    }
+
+    const addressDocId = String(
+      customerDetails.selectedAddressObj?.documentId ||
+        customerDetails.selectedAddressObj?.id ||
+        "",
+    );
+
+    if (!addressDocId) {
+      showSnackbar({
+        message: "Please select a customer delivery address.",
+        type: "error",
+      });
+      return;
+    }
 
     setIsConfirming(true);
 
-    setTimeout(() => {
-      // Create new customer if toggled
-      if (customerDetails.isNewCustomer) {
-        addCustomer({
-          name: customerDetails.fullName,
-          phone: customerDetails.phone,
-          email: customerDetails.email,
-        });
+    // Build items payload with service and service_varient documentIds
+    const apiItems: CreateOrderItemPayload[] = items.map((it) => {
+      let serviceDocId = it.serviceDocumentId;
+      let variantDocId = it.variantDocumentId;
+
+      if (!serviceDocId || !variantDocId) {
+        const matchedService = availableServices.find(
+          (s) =>
+            s.name.trim().toLowerCase() === it.serviceType.trim().toLowerCase() ||
+            s.documentId === it.serviceType,
+        );
+        serviceDocId = matchedService?.documentId || serviceDocId || "";
+
+        const variants = matchedService?.varients || matchedService?.variants || [];
+        const matchedVariant = variants.find(
+          (v) =>
+            v.name.trim().toLowerCase() === it.itemName.trim().toLowerCase() ||
+            v.documentId === it.itemName,
+        );
+        variantDocId = matchedVariant?.documentId || variantDocId || "";
       }
 
-      // Add Order to store
+      return {
+        service: String(serviceDocId || ""),
+        service_varient: String(variantDocId || ""),
+        quantity: it.quantity,
+        expressDelivery: !!it.isExpressDelivery,
+      };
+    });
+
+    const payload: CreateOrderApiPayload = {
+      userProfile: String(customerDetails.selectedCustomerId || ""),
+      items: apiItems,
+      pickup_address: addressDocId,
+      delivery_address: addressDocId,
+      pickupDate: logistics.pickupDate,
+      pickupTime: formatSlotToTime(logistics.pickupTimeSlot),
+      deliveryDate: logistics.deliveryDate,
+      deliveryTime: formatSlotToTime(logistics.deliveryTimeSlot),
+    };
+
+    try {
+      // Call backend API endpoint /api/admin/create-order
+      await orderApi.createOrder(payload);
+
+      // Add Order to local store for UI synchronization
       const primaryService = (items[0]?.serviceType || "Dry Clean Only") as any;
 
       const createdOrder = addOrder({
         customerName: customerDetails.fullName,
-        customerTier: customerDetails.isNewCustomer
-          ? "Guest Order"
-          : "Premium Membership",
+        customerTier: "Premium Membership",
         customerPhone: customerDetails.phone,
         customerEmail: customerDetails.email,
         pickupDate: `${logistics.pickupDate}, ${logistics.pickupTimeSlot}`,
@@ -186,11 +285,11 @@ export const CreateOrderPage: React.FC = () => {
         totalAmount,
         items: items.map((it) => ({
           id: it.id,
-          name: `${it.serviceType} - ${it.itemName}`,
+          name: `${it.serviceType} - ${it.itemName}${it.isExpressDelivery ? " (Express Delivery)" : ""}`,
           quantity: it.quantity,
-          price: it.unitPrice,
+          price: it.unitPrice + (it.isExpressDelivery ? 50 : 0),
         })),
-        deliveryAddress: "452 Broadway, NY",
+        deliveryAddress: deliveryAddress || "",
         specialInstructions: staffInstructions,
       });
 
@@ -204,18 +303,19 @@ export const CreateOrderPage: React.FC = () => {
       setTimeout(() => {
         navigate("/orders");
       }, 800);
-    }, 1000);
-  };
+    } catch (err: any) {
+      setIsConfirming(false);
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error?.message ||
+        err?.message ||
+        "Failed to create order";
 
-  const handleChangePaymentMethod = () => {
-    const nextMethod = paymentMethod.includes("Default")
-      ? "Credit Card (Ending in 4092)"
-      : "Pay on Delivery (Default)";
-    setPaymentMethod(nextMethod);
-    showSnackbar({
-      message: `Payment method updated to: ${nextMethod}`,
-      type: "info",
-    });
+      showSnackbar({
+        message: errMsg,
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -253,11 +353,13 @@ export const CreateOrderPage: React.FC = () => {
       {/* Grid Layout */}
       <div className="grid grid-cols-12 gap-gutter">
         {/* Form Area (8 cols) */}
-        <div className="col-span-12 lg:col-span-8 space-y-gutter">
+        <div className="col-span-12 lg:col-span-9 space-y-gutter">
           {/* Customer Details */}
           <CustomerDetailsSection
             data={customerDetails}
             onChange={handleCustomerDetailsChange}
+            onSelectCustomer={handleSelectCustomer}
+            onSelectAddress={handleSelectAddress}
           />
 
           {/* Services & Items */}
@@ -273,20 +375,17 @@ export const CreateOrderPage: React.FC = () => {
         </div>
 
         {/* Sidebar / Order Summary (4 cols) */}
-        <div className="col-span-12 lg:col-span-4">
+        <div className="col-span-12 lg:col-span-3">
           <div className="sticky top-22 space-y-gutter">
             {/* Order Summary Card */}
             <OrderSummaryCard
               itemCount={itemCount}
               subtotal={subtotal}
-              tax={tax}
-              expressFee={expressFee}
               deliveryFee={deliveryFee}
               total={totalAmount}
               paymentMethod={paymentMethod}
               isConfirming={isConfirming}
               onConfirmOrder={handleConfirmOrder}
-              onChangePaymentMethod={handleChangePaymentMethod}
             />
 
             {/* Staff Instructions Card */}
@@ -296,7 +395,10 @@ export const CreateOrderPage: React.FC = () => {
             />
 
             {/* Delivery Map Preview Card */}
-            <DeliveryMapCard address="452 Broadway, NY" />
+            <DeliveryMapCard
+              address={deliveryAddress}
+              selectedAddressObj={customerDetails.selectedAddressObj}
+            />
           </div>
         </div>
       </div>

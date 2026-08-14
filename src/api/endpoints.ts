@@ -20,6 +20,8 @@ export const ENDPOINTS = {
   // order endpoints
   getStats: `${BASE_URL}/api/admin/order-stats`,
   getAllOrder: `${BASE_URL}/api/orders`,
+  createOrder: `${BASE_URL}/api/admin/create-order`,
+  getServicesWithVariants: `${BASE_URL}/api/admin/services-with-variants`,
 
   // notification endpoints
   getAllNotification: `${BASE_URL}/api/notifications`,
