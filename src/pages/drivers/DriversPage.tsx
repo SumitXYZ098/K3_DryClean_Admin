@@ -23,6 +23,7 @@ export const DriversPage: React.FC = () => {
 
   const {
     drivers,
+    isLoading,
     fetchDrivers,
     updateDriver,
     deleteDriver,
@@ -161,6 +162,7 @@ export const DriversPage: React.FC = () => {
       {/* Driver List Table */}
       <DriverTable
         drivers={paginatedDrivers}
+        isLoading={isLoading}
         totalCount={filteredDrivers.length}
         onViewDetails={(driver) => setSelectedViewDriver(driver)}
         onEditDriver={(driver) => setSelectedEditDriver(driver)}

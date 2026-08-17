@@ -16,10 +16,6 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
 }) => {
   if (!order) return null;
 
-  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(
-    order.status,
-  );
-
   const statuses: {
     value: OrderStatus;
     label: string;
@@ -74,6 +70,15 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
     (s) => s.value === order.status,
   );
 
+  const nextStatusIndex =
+    currentStatusIndex !== -1 && currentStatusIndex + 1 < statuses.length
+      ? currentStatusIndex + 1
+      : currentStatusIndex;
+
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(
+    statuses[nextStatusIndex]?.value || order.status,
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdate(order.id, selectedStatus);
@@ -106,7 +111,9 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
             const isPast =
               currentStatusIndex !== -1 && index < currentStatusIndex;
             const isCurrent = order.status === st.value;
-            const isDisabled = isPast || isCurrent;
+            const isNextStep =
+              currentStatusIndex !== -1 && index === currentStatusIndex + 1;
+            const isDisabled = !isNextStep;
             const isSelected = selectedStatus === st.value;
             return (
               <label
@@ -156,6 +163,10 @@ export const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
                     ) : isPast ? (
                       <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-gray-200 text-gray-600">
                         Completed
+                      </span>
+                    ) : isNextStep ? (
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-green-100 text-green-700 border border-green-300">
+                        Next Step
                       </span>
                     ) : null}
                   </div>

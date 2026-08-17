@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import dashboardApi, {
   type DashboardStatsResponse,
   type RevenueTrendItem,
@@ -23,6 +23,7 @@ export const useDashboardHook = () => {
     },
     refetchInterval: 300000, // Auto-refetch every 5 minutes
     initialData: store.stats || undefined,
+    placeholderData: keepPreviousData,
   });
 
   // TanStack React Query - Get Revenue Trends
@@ -36,6 +37,7 @@ export const useDashboardHook = () => {
     },
     refetchInterval: 300000,
     initialData: store.revenueData.length > 0 ? store.revenueData : undefined,
+    placeholderData: keepPreviousData,
   });
 
   // TanStack React Query - Get Order Service Stats
@@ -48,6 +50,7 @@ export const useDashboardHook = () => {
     },
     refetchInterval: 300000,
     initialData: store.serviceStatsData || undefined,
+    placeholderData: keepPreviousData,
   });
 
   const isLoading =

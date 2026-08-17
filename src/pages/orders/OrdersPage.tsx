@@ -37,7 +37,7 @@ export const OrdersPage: React.FC = () => {
   } = useOrders();
 
   // Filters State
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("today_pickup");
   const [serviceTypeFilter, setServiceTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateRange, setDateRange] = useState("");
@@ -67,7 +67,7 @@ export const OrdersPage: React.FC = () => {
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setCurrentPage(1);
-    if (tabId === "All") {
+    if (tabId === "All" || tabId === "today_pickup") {
       setStatusFilter("All");
     } else {
       setStatusFilter(tabId);
@@ -91,7 +91,23 @@ export const OrdersPage: React.FC = () => {
       }
 
       // Tab Filter
-      if (activeTab !== "All" && order.status !== activeTab) {
+      if (activeTab === "today_pickup") {
+        const todayStr = dayjs().format("YYYY-MM-DD");
+        const todayFormatted = dayjs().format("MMM D, YYYY");
+        const orderPickup = dayjs(order.pickupDate).isValid()
+          ? dayjs(order.pickupDate).format("YYYY-MM-DD")
+          : "";
+
+        const isTodayPickup =
+          orderPickup === todayStr ||
+          (Boolean(order.pickupDate) &&
+            order.pickupDate.includes(todayFormatted)) ||
+          (Boolean(order.pickupDate) && order.pickupDate.includes(todayStr));
+
+        if (!isTodayPickup) {
+          return false;
+        }
+      } else if (activeTab !== "All" && order.status !== activeTab) {
         return false;
       }
 
@@ -118,16 +134,11 @@ export const OrdersPage: React.FC = () => {
         const pickupDate = dayjs(order.pickupDate).isValid()
           ? dayjs(order.pickupDate).format("YYYY-MM-DD")
           : "";
-        const deliveryDate = dayjs(order.deliveryDate).isValid()
-          ? dayjs(order.deliveryDate).format("YYYY-MM-DD")
-          : "";
 
         const matchesDate =
           createdDate === selectedDate ||
           pickupDate === selectedDate ||
-          deliveryDate === selectedDate ||
-          order.pickupDate.includes(dateRange) ||
-          order.deliveryDate.includes(dateRange);
+          order.pickupDate.includes(dateRange);
 
         if (!matchesDate) {
           return false;
@@ -183,11 +194,11 @@ export const OrdersPage: React.FC = () => {
     setTimeout(() => {
       hideLoading();
       const headers =
-        "Order ID,Customer Name,Customer Tier,Pickup Date,Delivery Date,Pickup Driver,Delivery Driver,Payment,Status,Total Amount\n";
+        "Order ID,Customer Name,Pickup Date,Delivery Date,Pickup Driver,Delivery Driver,Payment,Status,Total Amount\n";
       const rows = filteredOrders
         .map(
           (o) =>
-            `"${o.id}","${o.customerName}","${o.customerTier}","${
+            `"${o.id}","${o.customerName}","${
               o.pickupDate
             }","${o.deliveryDate}","${o.pickupPerson?.name || "Unassigned"}","${
               o.deliveryPerson?.name || "Unassigned"
@@ -215,14 +226,20 @@ export const OrdersPage: React.FC = () => {
     newStatus: OrderStatus,
     driver?: DriverInfo,
   ) => {
-    if (driver && (newStatus === "pickup_assigned" || newStatus === "delivery_assigned")) {
+    if (
+      driver &&
+      (newStatus === "pickup_assigned" || newStatus === "delivery_assigned")
+    ) {
       // When a driver is selected, call ONLY assignDriver (not updateOrderStatus)
       assignDriver(id, driver);
       showSnackbar({
         message: `Order ${id} assigned to driver ${driver.name}`,
         type: "success",
       });
-    } else if (newStatus === "pickup_assigned" || newStatus === "delivery_assigned") {
+    } else if (
+      newStatus === "pickup_assigned" ||
+      newStatus === "delivery_assigned"
+    ) {
       // Do NOT call updateOrderStatus without a driver. Open AssignDriverModal directly instead.
       const targetOrder =
         orders.find((o) => o.id === id || o.documentId === id) ||

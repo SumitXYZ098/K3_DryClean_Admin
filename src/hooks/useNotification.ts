@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import useNotificationStore, {
   type NotificationState,
 } from "../store/useNotificationStore";
@@ -51,7 +56,7 @@ export const useNotification = () => {
       const formatted: NotificationItem[] = rawData
         .sort(
           (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
         .map((item) => {
           const isRead = isNotificationReadForUser(item, userDocId, userId);
@@ -69,6 +74,7 @@ export const useNotification = () => {
       return formatted;
     },
     initialData: storeNotifications.length > 0 ? storeNotifications : undefined,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -81,7 +87,7 @@ export const useNotification = () => {
     if (storeNotifications && storeNotifications.length > 0) {
       queryClient.setQueryData<NotificationItem[]>(
         NOTIFICATIONS_QUERY_KEY,
-        storeNotifications
+        storeNotifications,
       );
     }
   }, [storeNotifications, queryClient]);
@@ -92,7 +98,9 @@ export const useNotification = () => {
   /**
    * Refetch wrapper for backwards compatibility
    */
-  const fetchNotifications = useCallback(async (): Promise<NotificationItem[]> => {
+  const fetchNotifications = useCallback(async (): Promise<
+    NotificationItem[]
+  > => {
     const result = await refetch();
     return result.data || activeNotifications;
   }, [refetch, activeNotifications]);
@@ -105,7 +113,7 @@ export const useNotification = () => {
       addNotificationStore(newNotif);
       queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
     },
-    [addNotificationStore, queryClient]
+    [addNotificationStore, queryClient],
   );
 
   // TanStack React Query Mutations
@@ -114,8 +122,9 @@ export const useNotification = () => {
       markAllAsReadStore();
     },
     onSuccess: () => {
-      queryClient.setQueryData<NotificationItem[]>(NOTIFICATIONS_QUERY_KEY, (old) =>
-        old ? old.map((n) => ({ ...n, read: true })) : undefined
+      queryClient.setQueryData<NotificationItem[]>(
+        NOTIFICATIONS_QUERY_KEY,
+        (old) => (old ? old.map((n) => ({ ...n, read: true })) : undefined),
       );
     },
   });
@@ -129,10 +138,14 @@ export const useNotification = () => {
       markAsReadStore(id);
     },
     onSuccess: (_, id) => {
-      queryClient.setQueryData<NotificationItem[]>(NOTIFICATIONS_QUERY_KEY, (old) =>
-        old
-          ? old.map((n) => (n.id === id || n.documentId === id ? { ...n, read: true } : n))
-          : undefined
+      queryClient.setQueryData<NotificationItem[]>(
+        NOTIFICATIONS_QUERY_KEY,
+        (old) =>
+          old
+            ? old.map((n) =>
+                n.id === id || n.documentId === id ? { ...n, read: true } : n,
+              )
+            : undefined,
       );
     },
   });
@@ -141,7 +154,7 @@ export const useNotification = () => {
     (id: number | string) => {
       markAsReadMutation.mutate(id);
     },
-    [markAsReadMutation]
+    [markAsReadMutation],
   );
 
   const clearNotificationsMutation = useMutation({
@@ -174,7 +187,9 @@ export const useNotification = () => {
   };
 
   const errorMessage = queryError
-    ? (queryError as any).response?.data?.message || (queryError as Error).message || "Failed to fetch notifications"
+    ? (queryError as any).response?.data?.message ||
+      (queryError as Error).message ||
+      "Failed to fetch notifications"
     : null;
 
   return {

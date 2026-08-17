@@ -9,6 +9,7 @@ import axios, {
 } from "axios";
 import useSnackbarStore from "../store/useSnackbarStore";
 import useAuthStore from "../store/useAuthStore";
+import useLoadingStore from "../store/useLoadingStore";
 
 export const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL;
 
@@ -30,6 +31,8 @@ export const apiClient: AxiosInstance = axios.create({
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    useLoadingStore.getState().startApiRequest();
+
     // Retrieve authentication token from useAuthStore (or fallback)
     const token =
       useAuthStore.getState().getToken() ||
@@ -52,6 +55,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error: AxiosError) => {
+    useLoadingStore.getState().endApiRequest();
     if (import.meta.env.DEV) {
       console.error("[API Request Error]", error);
     }
@@ -67,9 +71,11 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
+    useLoadingStore.getState().endApiRequest();
     return response;
   },
   (error: AxiosError<{ message?: string; error?: string }>) => {
+    useLoadingStore.getState().endApiRequest();
     const { response, request } = error;
     const showSnackbar = useSnackbarStore.getState().showSnackbar;
 

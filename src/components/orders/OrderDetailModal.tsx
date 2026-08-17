@@ -81,7 +81,9 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               const isPast =
                 currentStatusIndex !== -1 && idx < currentStatusIndex;
               const isCurrent = order.status === st;
-              const isDisabled = isPast || isCurrent;
+              const isNextStep =
+                currentStatusIndex !== -1 && idx === currentStatusIndex + 1;
+              const isDisabled = !isNextStep;
 
               return (
                 <div
@@ -97,16 +99,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         ? `${stObj.label} (Current Status)`
                         : isPast
                           ? `${stObj.label} (Completed)`
-                          : `Click to set status to ${stObj.label}`
+                          : isNextStep
+                            ? `Click to set status to ${stObj.label}`
+                            : `${stObj.label} (Complete previous steps first)`
                     }
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isCurrent
                         ? "bg-primary text-on-primary ring-4 ring-primary/20 scale-110 cursor-not-allowed"
                         : isPast
                           ? "bg-green-600/70 text-white cursor-not-allowed opacity-80"
-                          : isPassed
-                            ? "bg-green-600 text-white cursor-pointer"
-                            : "bg-outline-variant text-secondary cursor-pointer hover:bg-outline"
+                          : isNextStep
+                            ? "bg-outline-variant text-primary border-2 border-primary hover:bg-primary hover:text-on-primary cursor-pointer scale-105"
+                            : "bg-outline-variant/40 text-secondary/40 cursor-not-allowed opacity-50"
                     }`}
                   >
                     {isPassed ? "✓" : idx + 1}
@@ -117,9 +121,9 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         ? "text-primary font-bold"
                         : isPast
                           ? "text-on-surface-variant/70"
-                          : isPassed
-                            ? "text-on-surface"
-                            : "text-secondary"
+                          : isNextStep
+                            ? "text-primary font-bold"
+                            : "text-secondary/50"
                     }`}
                   >
                     {stObj.label}
@@ -216,6 +220,17 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   {order.deliveryDate}
                 </span>
               </p>
+              {(order.status === "delivered" || Boolean(order.deliveryAt)) && (
+                <p className="text-xs text-secondary flex justify-between font-bold bg-green-50 px-2 py-1 rounded border border-green-200 mt-1.5">
+                  <span>Delivered At:</span>
+                  <span>
+                    {order.deliveryAt && dayjs(order.deliveryAt).isValid()
+                      ? dayjs(order.deliveryAt).format("MMM D, YYYY h:mm A")
+                      : order.deliveryAt ||
+                        dayjs().format("MMM D, YYYY h:mm A")}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -250,18 +265,24 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             </h4>
             <div className="flex items-center gap-2">
               <span className="text-xs text-secondary">Payment:</span>
-              <select
-                value={order.paymentStatus}
-                onChange={(e) =>
-                  onUpdatePayment(order.id, e.target.value as PaymentStatus)
-                }
-                className="bg-surface-container-lowest border border-outline-variant text-xs rounded px-2 py-1 text-on-surface font-bold"
-              >
-                <option value="Paid">Paid</option>
-                <option value="Unpaid">Unpaid</option>
-                <option value="Refunded">Refunded</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+              {order.paymentStatus.toLowerCase() === "paid" ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  Payment is Paid
+                </span>
+              ) : (
+                <select
+                  value={order.paymentStatus}
+                  onChange={(e) =>
+                    onUpdatePayment(order.id, e.target.value as PaymentStatus)
+                  }
+                  className="bg-surface-container-lowest border border-outline-variant text-xs rounded px-2 py-1 text-on-surface font-bold"
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              )}
             </div>
           </div>
           <table className="w-full text-left text-xs">
@@ -270,6 +291,9 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <th className="px-md py-2">Item Description</th>
                 <th className="px-md py-2">Qty</th>
                 <th className="px-md py-2">Unit Price</th>
+                {order.expressDelivery && (
+                  <th className="px-md py-2 text-right">Express Delivery</th>
+                )}
                 <th className="px-md py-2 text-right">Subtotal</th>
               </tr>
             </thead>
@@ -285,6 +309,11 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <td className="px-md py-2.5 text-secondary">
                     ₹{item.price.toFixed(2)}
                   </td>
+                  {order.expressDelivery && (
+                    <td className="px-md py-2.5 text-right font-bold text-on-surface">
+                      ₹{(item.quantity * 50).toFixed(2)}
+                    </td>
+                  )}
                   <td className="px-md py-2.5 text-right font-bold text-on-surface">
                     ₹{(item.quantity * item.price).toFixed(2)}
                   </td>

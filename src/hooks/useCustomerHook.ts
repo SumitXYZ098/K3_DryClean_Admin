@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import customerApi, {
   type CreateCustomerPayload,
   type CreateCustomerResponse,
@@ -54,6 +54,7 @@ export const useCustomerHook = () => {
       return mappedCustomers;
     },
     initialData: storeCustomers.length > 0 ? storeCustomers : undefined,
+    placeholderData: keepPreviousData,
   });
 
   // Keep Zustand store in sync when query data updates
@@ -80,17 +81,10 @@ export const useCustomerHook = () => {
       if (state.hasFetched && !force && state.customers.length > 0) {
         return state.customers;
       }
-      if (state.customers.length === 0) {
-        showLoading("Fetching customer directory...");
-      }
-      try {
-        const result = await refetch();
-        return result.data || state.customers;
-      } finally {
-        hideLoading();
-      }
+      const result = await refetch();
+      return result.data || state.customers;
     },
-    [refetch, showLoading, hideLoading]
+    [refetch]
   );
 
   // TanStack React Query - Post Data (Create Customer Mutation)

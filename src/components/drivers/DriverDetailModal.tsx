@@ -56,7 +56,7 @@ export const DriverDetailModal: React.FC<DriverDetailModalProps> = ({
   }, [driver]);
 
   const [activeOrderTab, setActiveOrderTab] = useState<"pickup" | "delivery">(
-    "pickup"
+    "pickup",
   );
 
   if (!driver || !detailData) return null;
@@ -97,9 +97,6 @@ export const DriverDetailModal: React.FC<DriverDetailModalProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-secondary">
-                Document ID: {currentDriver.documentId}
-              </p>
             </div>
           </div>
           <button
@@ -202,7 +199,9 @@ export const DriverDetailModal: React.FC<DriverDetailModalProps> = ({
                 }`}
               >
                 <div>
-                  <p className="text-xs text-secondary font-semibold">Pickup Orders</p>
+                  <p className="text-xs text-secondary font-semibold">
+                    Pickup Orders
+                  </p>
                   <p className="text-xl font-headline-md font-bold text-primary mt-0.5">
                     {pickupOrders.length}
                   </p>
@@ -221,7 +220,9 @@ export const DriverDetailModal: React.FC<DriverDetailModalProps> = ({
                 }`}
               >
                 <div>
-                  <p className="text-xs text-secondary font-semibold">Delivery Orders</p>
+                  <p className="text-xs text-secondary font-semibold">
+                    Delivery Orders
+                  </p>
                   <p className="text-xl font-headline-md font-bold text-on-surface mt-0.5">
                     {deliveryOrders.length}
                   </p>
@@ -252,7 +253,9 @@ export const DriverDetailModal: React.FC<DriverDetailModalProps> = ({
                             <p className="text-sm font-bold text-on-surface">
                               {ord.orderNo}
                             </p>
-                            <p className="text-xs text-secondary">Pickup Order</p>
+                            <p className="text-xs text-secondary">
+                              Pickup Order
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -285,7 +288,9 @@ export const DriverDetailModal: React.FC<DriverDetailModalProps> = ({
                           <p className="text-sm font-bold text-on-surface">
                             {ord.orderNo}
                           </p>
-                          <p className="text-xs text-secondary">Delivery Order</p>
+                          <p className="text-xs text-secondary">
+                            Delivery Order
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">

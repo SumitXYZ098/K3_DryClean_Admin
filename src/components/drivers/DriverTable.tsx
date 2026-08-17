@@ -4,6 +4,7 @@ import Pagination from "../common/Pagination";
 
 interface DriverTableProps {
   drivers: Driver[];
+  isLoading?: boolean;
   totalCount: number;
   onViewDetails: (driver: Driver) => void;
   onEditDriver: (driver: Driver) => void;
@@ -16,6 +17,7 @@ interface DriverTableProps {
 
 export const DriverTable: React.FC<DriverTableProps> = ({
   drivers,
+  isLoading = false,
   totalCount,
   onViewDetails,
   onEditDriver,
@@ -50,7 +52,36 @@ export const DriverTable: React.FC<DriverTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant">
-            {drivers.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <tr key={`driver-skeleton-${index}`} className="animate-pulse">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-outline-variant/40"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 w-28 bg-outline-variant/40 rounded-md"></div>
+                        <div className="h-3 w-20 bg-outline-variant/40 rounded-md"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-4 w-24 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-4 w-12 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-4 w-12 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-6 w-16 bg-outline-variant/40 rounded-full"></div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="h-8 w-20 bg-outline-variant/40 rounded-lg ml-auto"></div>
+                  </td>
+                </tr>
+              ))
+            ) : drivers.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-secondary">
                   <div className="flex flex-col items-center justify-center gap-2">

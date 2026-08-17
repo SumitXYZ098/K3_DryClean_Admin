@@ -155,9 +155,9 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({
       </td>
 
       {/* Delivery Date */}
-      <td className="px-lg py-4 text-body-md text-on-surface">
+      {/* <td className="px-lg py-4 text-body-md text-on-surface">
         {order.deliveryDate}
-      </td>
+      </td> */}
 
       {/* Driver Info or Assign Action */}
       <td className="px-lg py-4">

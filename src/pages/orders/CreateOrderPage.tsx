@@ -31,7 +31,9 @@ export const CreateOrderPage: React.FC = () => {
   const { addOrder } = useOrderStore();
   const { showSnackbar } = useSnackbarStore();
 
-  const [availableServices, setAvailableServices] = useState<ServiceWithVariants[]>([]);
+  const [availableServices, setAvailableServices] = useState<
+    ServiceWithVariants[]
+  >([]);
 
   // Auto-fetch services catalog for documentId mapping
   useEffect(() => {
@@ -184,7 +186,10 @@ export const CreateOrderPage: React.FC = () => {
   };
 
   const handleConfirmOrder = async () => {
-    if (!customerDetails.selectedCustomerId && !customerDetails.fullName.trim()) {
+    if (
+      !customerDetails.selectedCustomerId &&
+      !customerDetails.fullName.trim()
+    ) {
       showSnackbar({
         message: "Please search and select a customer before confirming order.",
         type: "error",
@@ -230,12 +235,14 @@ export const CreateOrderPage: React.FC = () => {
       if (!serviceDocId || !variantDocId) {
         const matchedService = availableServices.find(
           (s) =>
-            s.name.trim().toLowerCase() === it.serviceType.trim().toLowerCase() ||
+            s.name.trim().toLowerCase() ===
+              it.serviceType.trim().toLowerCase() ||
             s.documentId === it.serviceType,
         );
         serviceDocId = matchedService?.documentId || serviceDocId || "";
 
-        const variants = matchedService?.varients || matchedService?.variants || [];
+        const variants =
+          matchedService?.varients || matchedService?.variants || [];
         const matchedVariant = variants.find(
           (v) =>
             v.name.trim().toLowerCase() === it.itemName.trim().toLowerCase() ||
@@ -272,7 +279,6 @@ export const CreateOrderPage: React.FC = () => {
 
       const createdOrder = addOrder({
         customerName: customerDetails.fullName,
-        customerTier: "Premium Membership",
         customerPhone: customerDetails.phone,
         customerEmail: customerDetails.email,
         pickupDate: `${logistics.pickupDate}, ${logistics.pickupTimeSlot}`,

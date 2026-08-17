@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import useOrderStore, {
   type Order,
   type OrderStatus,
@@ -49,6 +54,7 @@ export const useOrders = () => {
       return mappedOrders;
     },
     initialData: storeOrders.length > 0 ? storeOrders : undefined,
+    placeholderData: keepPreviousData,
   });
 
   // Keep Zustand store in sync when queriedOrders changes

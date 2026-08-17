@@ -44,9 +44,9 @@ export const OrderTable: React.FC<OrderTableProps> = ({
               <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Pickup Date
               </th>
-              <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
+              {/* <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Delivery Date
-              </th>
+              </th> */}
               <th className="px-lg py-4 text-label-sm uppercase text-on-surface-variant font-bold text-nowrap">
                 Driver
               </th>
@@ -70,9 +70,6 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                   </td>
                   <td className="px-lg py-4">
                     <div className="h-4 w-32 bg-outline-variant/40 rounded-md"></div>
-                  </td>
-                  <td className="px-lg py-4">
-                    <div className="h-4 w-24 bg-outline-variant/40 rounded-md"></div>
                   </td>
                   <td className="px-lg py-4">
                     <div className="h-4 w-24 bg-outline-variant/40 rounded-md"></div>

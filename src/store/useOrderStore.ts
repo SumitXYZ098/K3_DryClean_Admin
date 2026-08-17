@@ -58,12 +58,6 @@ export interface Order {
   id: string;
   documentId?: string;
   customerName: string;
-  customerTier:
-    | "Premium Membership"
-    | "Guest Order"
-    | "Bulk/Commercial"
-    | "Mobile User"
-    | "VIP Client";
   customerEmail?: string;
   customerPhone?: string;
   pickupDate: string;
@@ -79,6 +73,7 @@ export interface Order {
   deliveryAddress?: string;
   specialInstructions?: string;
   createdAt: string;
+  deliveryAt?: string;
 }
 
 const initialFleetActivities: FleetActivity[] = [

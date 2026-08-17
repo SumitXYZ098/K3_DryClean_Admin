@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import driverApi, {
   type CreateDriverPayload,
   type UpdateDriverPayload,
@@ -50,6 +50,7 @@ export const useDriverHook = () => {
       return mapped;
     },
     initialData: storeDrivers.length > 0 ? storeDrivers : undefined,
+    placeholderData: keepPreviousData
   });
 
   useEffect(() => {
@@ -68,17 +69,10 @@ export const useDriverHook = () => {
       if (state.hasFetched && !force && state.drivers.length > 0) {
         return state.drivers;
       }
-      if (state.drivers.length === 0) {
-        showLoading("Fetching driver roster...");
-      }
-      try {
-        const result = await refetch();
-        return result.data || state.drivers;
-      } finally {
-        hideLoading();
-      }
+      const result = await refetch();
+      return result.data || state.drivers;
     },
-    [refetch, showLoading, hideLoading]
+    [refetch]
   );
 
   /**

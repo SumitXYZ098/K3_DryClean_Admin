@@ -5,6 +5,7 @@ import Pagination from "../common/Pagination";
 
 export interface CustomerTableProps {
   customers: Customer[];
+  isLoading?: boolean;
   totalCount: number;
   selectedRowId: string | null;
   openActionMenuId: string | null;
@@ -20,6 +21,7 @@ export interface CustomerTableProps {
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
+  isLoading = false,
   totalCount,
   selectedRowId,
   openActionMenuId,
@@ -60,7 +62,42 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant">
-            {customers.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <tr key={`customer-skeleton-${index}`} className="animate-pulse">
+                  <td className="px-lg py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-outline-variant/40"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 w-28 bg-outline-variant/40 rounded-md"></div>
+                        <div className="h-3 w-16 bg-outline-variant/40 rounded-md"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 bg-outline-variant/40 rounded-md"></div>
+                      <div className="h-3 w-24 bg-outline-variant/40 rounded-md"></div>
+                    </div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-12 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-16 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-6 w-16 bg-outline-variant/40 rounded-full"></div>
+                  </td>
+                  <td className="px-lg py-4">
+                    <div className="h-4 w-20 bg-outline-variant/40 rounded-md"></div>
+                  </td>
+                  <td className="px-lg py-4 text-center">
+                    <div className="h-6 w-6 bg-outline-variant/40 rounded-full mx-auto"></div>
+                  </td>
+                </tr>
+              ))
+            ) : customers.length === 0 ? (
               <tr>
                 <td
                   colSpan={7}

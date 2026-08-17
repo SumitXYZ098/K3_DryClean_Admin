@@ -19,8 +19,13 @@ export const CustomersPage: React.FC = () => {
   const { searchQuery, setSearchQuery, setCustomActionHandler } =
     useHeaderStore();
 
-  const { customers, fetchCustomers, toggleCustomerStatus, deleteCustomer } =
-    useCustomerHook();
+  const {
+    customers,
+    isLoading,
+    fetchCustomers,
+    toggleCustomerStatus,
+    deleteCustomer,
+  } = useCustomerHook();
 
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [spendFilter, setSpendFilter] = useState("All");
@@ -211,6 +216,7 @@ export const CustomersPage: React.FC = () => {
       {/* Customer Directory Table Component */}
       <CustomerTable
         customers={paginatedCustomers}
+        isLoading={isLoading}
         totalCount={filteredCustomers.length}
         selectedRowId={selectedRowId}
         openActionMenuId={openActionMenuId}

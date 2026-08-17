@@ -201,6 +201,7 @@ export interface ApiOrder {
   orderItems?: ApiOrderItem[];
   deliveryPerson?: ApiPerson | null;
   pickupPerson?: ApiPerson | null;
+  deliveryAt?: string | null;
 }
 
 export interface GetAllOrdersResponse {
@@ -297,7 +298,6 @@ export const mapApiOrderToOrder = (apiOrder: ApiOrder): Order => {
     id: apiOrder.orderNo || `#ORD-${apiOrder.id}`,
     documentId: apiOrder.documentId || apiOrder.orderNo,
     customerName,
-    customerTier: "Guest Order",
     customerEmail,
     customerPhone,
     pickupDate,
@@ -316,6 +316,7 @@ export const mapApiOrderToOrder = (apiOrder: ApiOrder): Order => {
       "",
     specialInstructions: apiOrder.specialInstruction || "",
     createdAt: apiOrder.createdAt || new Date().toISOString(),
+    deliveryAt: apiOrder.deliveryAt || "",
   };
 };
 

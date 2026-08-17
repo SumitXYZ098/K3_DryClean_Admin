@@ -61,9 +61,9 @@ export const mapCustomerProfileToCustomer = (
       : `${baseUrl}${profile.profileImage.url}`;
   }
 
-  const formattedDate = profile.createdAt
-    ? dayjs(profile.createdAt).format("MMM D, YYYY")
-    : "Just now";
+  const formattedDate = profile.lastOrder
+    ? dayjs(profile.lastOrder).format("MMM D, YYYY")
+    : "No Order Yet";
 
   // Ensure id format starts with #K3- or retains provided customerId
   let formattedId = profile.customerId || `K3-${profile.id}`;
