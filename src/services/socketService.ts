@@ -15,6 +15,20 @@ const statusChangeCallbacks = new Set<(isConnected: boolean) => void>();
 
 export const getSocket = (): Socket | null => socket;
 
+export const unsubscribeSocketCallbacks = ({
+  onNotificationReceived,
+  onStatusChange,
+  onOrderStatusChange,
+}: {
+  onNotificationReceived?: (data: any) => void;
+  onStatusChange?: (isConnected: boolean) => void;
+  onOrderStatusChange?: (data: any) => void;
+}) => {
+  if (onNotificationReceived) notificationCallbacks.delete(onNotificationReceived);
+  if (onStatusChange) statusChangeCallbacks.delete(onStatusChange);
+  if (onOrderStatusChange) orderStatusCallbacks.delete(onOrderStatusChange);
+};
+
 const attachListeners = (s: Socket) => {
   // --- NOTIFICATION EVENT LISTENERS ---
   const handleNotification = (data: any) => {

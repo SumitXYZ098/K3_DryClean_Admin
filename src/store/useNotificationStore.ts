@@ -29,6 +29,14 @@ export interface NotificationState {
   disconnectSocket: () => void;
 }
 
+const handleNotificationReceived = (newNotificationData: any) => {
+  useNotificationStore.getState().addNotification(newNotificationData);
+};
+
+const handleStatusChange = (isConnected: boolean) => {
+  useNotificationStore.setState({ socketConnected: isConnected });
+};
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
@@ -165,14 +173,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   initSocket: () => {
-    connectSocketService(
-      (newNotificationData) => {
-        get().addNotification(newNotificationData);
-      },
-      (isConnected) => {
-        set({ socketConnected: isConnected });
-      },
-    );
+    connectSocketService(handleNotificationReceived, handleStatusChange);
   },
 
   disconnectSocket: () => {

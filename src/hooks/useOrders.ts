@@ -14,7 +14,11 @@ import useOrderStore, {
   type DriverInfo,
 } from "../store/useOrderStore";
 import orderApi, { mapApiOrderToOrder } from "../api/orderApi";
-import { connectSocket, joinOrderRoomSocket } from "../services/socketService";
+import {
+  connectSocket,
+  joinOrderRoomSocket,
+  unsubscribeSocketCallbacks,
+} from "../services/socketService";
 
 export const ORDERS_QUERY_KEY = ["orders"];
 
@@ -66,14 +70,27 @@ export const useOrders = () => {
 
   // Connect socket and listen for real-time order updates
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleOrderStatusChange = (_statusData: any) => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      }, 300);
+    };
+
     connectSocket(
       undefined, // notifications handled by useNotification
       undefined, // socket status
-      (_statusData: any) => {
-        // Invalidate React Query cache so order list re-renders with latest data
-        queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
-      },
+      handleOrderStatusChange,
     );
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      unsubscribeSocketCallbacks({
+        onOrderStatusChange: handleOrderStatusChange,
+      });
+    };
   }, [queryClient]);
 
   /**
