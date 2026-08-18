@@ -99,7 +99,13 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
     e.preventDefault();
     if (!searchQuery.trim()) return;
     showSnackbar({
-      message: `Searching ${currentConfig.actionButtonText.replace("Add ", "").replace("New ", "")} for "${searchQuery}"...`,
+      message: `Searching ${
+        currentConfig.actionButtonText
+          ? currentConfig.actionButtonText
+              .replace("Add ", "")
+              .replace("New ", "")
+          : "items"
+      } for "${searchQuery}"...`,
       type: "info",
     });
   };
