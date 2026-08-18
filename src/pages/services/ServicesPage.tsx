@@ -90,7 +90,10 @@ export const ServicesPage: React.FC = () => {
       {viewMode === "add-item" || viewMode === "edit-item" ? (
         <div className="animate-in fade-in duration-200">
           {/* Breadcrumbs for Form */}
-          <nav aria-label="Breadcrumb" className="flex text-label-sm font-label-sm text-secondary mb-md">
+          <nav
+            aria-label="Breadcrumb"
+            className="flex text-label-sm font-label-sm text-secondary mb-md"
+          >
             <ol className="inline-flex items-center space-x-1 md:space-x-2">
               <li className="inline-flex items-center">
                 <button
@@ -123,7 +126,9 @@ export const ServicesPage: React.FC = () => {
                     chevron_right
                   </span>
                   <span className="text-on-surface font-semibold">
-                    {viewMode === "edit-item" ? "Edit Item" : "Add Service Item"}
+                    {viewMode === "edit-item"
+                      ? "Edit Item"
+                      : "Add Service Item"}
                   </span>
                 </div>
               </li>
@@ -152,7 +157,10 @@ export const ServicesPage: React.FC = () => {
           {viewMode === "items" && selectedCategoryId ? (
             <div className="flex flex-col gap-lg animate-in fade-in duration-200">
               {/* Breadcrumbs */}
-              <nav aria-label="Breadcrumb" className="flex text-label-sm font-label-sm text-secondary">
+              <nav
+                aria-label="Breadcrumb"
+                className="flex text-label-sm font-label-sm text-secondary"
+              >
                 <ol className="inline-flex items-center space-x-1 md:space-x-2">
                   <li className="inline-flex items-center">
                     <button
@@ -168,7 +176,9 @@ export const ServicesPage: React.FC = () => {
                         chevron_right
                       </span>
                       <span className="text-on-surface font-semibold">
-                        {selectedCategoryName || activeCategory?.name || "Dry Cleaning"}
+                        {selectedCategoryName ||
+                          activeCategory?.name ||
+                          "Dry Cleaning"}
                       </span>
                     </div>
                   </li>
@@ -183,14 +193,20 @@ export const ServicesPage: React.FC = () => {
                     className="p-2 rounded-lg border border-outline-variant hover:bg-surface-container-high text-secondary hover:text-primary transition-colors cursor-pointer"
                     title="Back to Categories"
                   >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="material-symbols-outlined">
+                      arrow_back
+                    </span>
                   </button>
                   <div>
                     <h2 className="font-display-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
-                      {selectedCategoryName || activeCategory?.name || "Dry Cleaning"} Items
+                      {selectedCategoryName ||
+                        activeCategory?.name ||
+                        "Dry Cleaning"}{" "}
+                      Items
                     </h2>
                     <p className="font-body-md text-body-md text-secondary mt-0.5">
-                      Configure individual garment prices, promotional discounts, and express turnarounds.
+                      Configure individual garment prices, promotional
+                      discounts, and express turnarounds.
                     </p>
                   </div>
                 </div>
@@ -199,7 +215,9 @@ export const ServicesPage: React.FC = () => {
                   onClick={handleOpenAddItem}
                   className="bg-primary text-on-primary px-lg py-sm rounded-lg font-title-md text-body-md hover:bg-surface-tint transition-colors flex items-center gap-xs w-fit shadow-sm cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  <span className="material-symbols-outlined text-[18px]">
+                    add
+                  </span>
                   Add New Item
                 </button>
               </div>
@@ -242,16 +260,17 @@ export const ServicesPage: React.FC = () => {
                     Services Management
                   </h2>
                   <p className="font-body-md text-body-md text-secondary mt-1">
-                    Manage and configure service offerings across all facilities.
+                    Manage and configure service offerings across all
+                    facilities.
                   </p>
                 </div>
-                <button
+                {/* <button
                   onClick={handleOpenAddCategory}
                   className="bg-primary text-on-primary px-lg py-sm rounded-lg font-title-md text-title-md flex items-center gap-sm hover:bg-primary-container transition-colors shadow-sm cursor-pointer"
                 >
                   <span className="material-symbols-outlined">add</span>
                   Add New Category
-                </button>
+                </button> */}
               </div>
 
               {/* Stats Overview Metrics */}
@@ -297,7 +316,11 @@ export const ServicesPage: React.FC = () => {
                   {/* Status Toggle filter */}
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                    onChange={(e) =>
+                      setStatusFilter(
+                        e.target.value as "all" | "active" | "inactive",
+                      )
+                    }
                     className="bg-surface-container-lowest border border-outline-variant rounded-lg py-1.5 px-md text-body-md focus:border-primary outline-none text-on-surface cursor-pointer"
                   >
                     <option value="all">All Statuses</option>
@@ -327,7 +350,9 @@ export const ServicesPage: React.FC = () => {
                   <span className="material-symbols-outlined text-[48px] text-outline">
                     grid_off
                   </span>
-                  <p className="font-title-md text-on-surface mt-sm">No Service Categories found</p>
+                  <p className="font-title-md text-on-surface mt-sm">
+                    No Service Categories found
+                  </p>
                   <p className="font-body-md text-secondary">
                     Try adjusting your search criteria or create a new category.
                   </p>
@@ -335,7 +360,9 @@ export const ServicesPage: React.FC = () => {
                     onClick={handleOpenAddCategory}
                     className="mt-md bg-primary text-on-primary px-md py-sm rounded-lg font-title-md text-body-md hover:bg-surface-tint inline-flex items-center gap-xs"
                   >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
+                    <span className="material-symbols-outlined text-[18px]">
+                      add
+                    </span>
                     Add New Category
                   </button>
                 </div>
@@ -347,7 +374,10 @@ export const ServicesPage: React.FC = () => {
 
       {/* Category Modal */}
       <AddEditCategoryModal
-        key={editingCategory?.id || (isCategoryModalOpen ? "modal-open" : "modal-closed")}
+        key={
+          editingCategory?.id ||
+          (isCategoryModalOpen ? "modal-open" : "modal-closed")
+        }
         isOpen={isCategoryModalOpen}
         category={editingCategory}
         onClose={() => setIsCategoryModalOpen(false)}

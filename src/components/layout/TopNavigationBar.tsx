@@ -11,8 +11,8 @@ export interface TopNavigationBarProps {
 
 interface PageHeaderConfig {
   searchPlaceholder: string;
-  actionButtonText: string;
-  actionButtonIcon: string;
+  actionButtonText?: string;
+  actionButtonIcon?: string;
 }
 
 const pageConfigs: Record<string, PageHeaderConfig> = {
@@ -38,8 +38,8 @@ const pageConfigs: Record<string, PageHeaderConfig> = {
   },
   "/services": {
     searchPlaceholder: "Search dry cleaning & laundry services...",
-    actionButtonText: "Add Service",
-    actionButtonIcon: "add_circle",
+    // actionButtonText: "Add Service",
+    // actionButtonIcon: "add_circle",
   },
   "/payments": {
     searchPlaceholder: "Search invoices or transaction ID...",
@@ -170,22 +170,26 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
           onClearAll={clearNotifications}
         />
 
-        <div className="h-8 w-px bg-outline-variant mx-2" />
+        {currentConfig.actionButtonIcon && (
+          <div className="h-8 w-px bg-outline-variant mx-2" />
+        )}
 
         {/* Dynamic Route Primary Action Button */}
-        <button
-          type="button"
-          onClick={handlePrimaryButtonClick}
-          className="bg-primary text-on-primary px-lg py-2 rounded-default font-title-md text-sm flex items-center gap-sm hover:bg-primary-container transition-all cursor-pointer shadow-sm active:scale-95"
-        >
-          <span
-            className="material-symbols-outlined text-[20px]"
-            data-icon={currentConfig.actionButtonIcon}
+        {currentConfig.actionButtonIcon && (
+          <button
+            type="button"
+            onClick={handlePrimaryButtonClick}
+            className="bg-primary text-on-primary px-lg py-2 rounded-default font-title-md text-sm flex items-center gap-sm hover:bg-primary-container transition-all cursor-pointer shadow-sm active:scale-95"
           >
-            {currentConfig.actionButtonIcon}
-          </span>
-          {currentConfig.actionButtonText}
-        </button>
+            <span
+              className="material-symbols-outlined text-[20px]"
+              data-icon={currentConfig.actionButtonIcon}
+            >
+              {currentConfig.actionButtonIcon}
+            </span>
+            {currentConfig.actionButtonText}
+          </button>
+        )}
       </div>
     </header>
   );
