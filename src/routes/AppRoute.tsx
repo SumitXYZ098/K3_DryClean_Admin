@@ -12,6 +12,7 @@ import CustomersPage from "../pages/customers/CustomersPage";
 import AddCustomerPage from "../pages/customers/AddCustomerPage";
 import DriversPage from "../pages/drivers/DriversPage";
 import AddDriverPage from "../pages/drivers/AddDriverPage";
+import ServicesPage from "../pages/services/ServicesPage";
 import PlaceholderPage from "../pages/common/PlaceholderPage";
 import useAuthStore from "../store/useAuthStore";
 
@@ -114,16 +115,10 @@ export const AppRoute = () => {
             />
           }
         />
-        <Route
-          path="/services"
-          element={
-            <PlaceholderPage
-              title="Services & Pricing"
-              icon="dry_cleaning"
-              description="Configure dry cleaning services, garment categories, and pricing tiers."
-            />
-          }
-        />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/services/items" element={<ServicesPage />} />
+        <Route path="/services/new" element={<ServicesPage />} />
+        <Route path="/services/add" element={<ServicesPage />} />
         <Route
           path="/payments"
           element={

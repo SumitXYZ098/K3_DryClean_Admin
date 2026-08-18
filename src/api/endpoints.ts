@@ -23,6 +23,17 @@ export const ENDPOINTS = {
   createOrder: `${BASE_URL}/api/admin/create-order`,
   getServicesWithVariants: `${BASE_URL}/api/admin/services-with-variants`,
 
+  // service and variant management endpoints
+  getAllServices: `${BASE_URL}/api/services`,
+  createService: `${BASE_URL}/api/services`,
+  updateService: (docId: string) => `${BASE_URL}/api/services/${docId}`,
+  deleteService: (docId: string) => `${BASE_URL}/api/services/${docId}`,
+
+  getAllServiceVariants: `${BASE_URL}/api/service-variants`,
+  createServiceVariant: `${BASE_URL}/api/service-variants`,
+  updateServiceVariant: (docId: string) => `${BASE_URL}/api/service-variants/${docId}`,
+  deleteServiceVariant: (docId: string) => `${BASE_URL}/api/service-variants/${docId}`,
+
   // notification endpoints
   getAllNotification: `${BASE_URL}/api/notifications`,
   getMarkAllNotificationsAsRead: `${BASE_URL}/api/notifications/mark-all-read`,
