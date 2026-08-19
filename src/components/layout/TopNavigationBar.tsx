@@ -38,13 +38,9 @@ const pageConfigs: Record<string, PageHeaderConfig> = {
   },
   "/services": {
     searchPlaceholder: "Search dry cleaning & laundry services...",
-    // actionButtonText: "Add Service",
-    // actionButtonIcon: "add_circle",
   },
   "/payments": {
     searchPlaceholder: "Search invoices or transaction ID...",
-    actionButtonText: "New Transaction",
-    actionButtonIcon: "payments",
   },
   "/promotions": {
     searchPlaceholder: "Search promo codes or campaigns...",

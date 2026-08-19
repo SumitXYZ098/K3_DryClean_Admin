@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import dayjs from "dayjs";
 import useOrders from "../../hooks/useOrders";
 import {
@@ -23,6 +23,7 @@ import AssignDriverModal from "../../components/orders/AssignDriverModal";
 
 export const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { showSnackbar } = useSnackbarStore();
   const { showLoading, hideLoading } = useLoadingStore();
   const { searchQuery, setSearchQuery, setCustomActionHandler } =
@@ -63,6 +64,21 @@ export const OrdersPage: React.FC = () => {
     };
   }, [setCustomActionHandler, navigate]);
 
+  // Sync URL search query param with header search store
+  useEffect(() => {
+    const searchFromUrl = searchParams.get("search");
+    if (searchFromUrl !== null) {
+      setSearchQuery(searchFromUrl);
+    } else {
+      setSearchQuery("");
+    }
+  }, [searchParams, setSearchQuery]);
+
+  // Derive active tab and status filter when a search query is active
+  const hasSearch = Boolean(searchQuery.trim() || searchParams.get("search"));
+  const effectiveActiveTab = hasSearch ? "All" : activeTab;
+  const effectiveStatusFilter = hasSearch ? "All" : statusFilter;
+
   // Handle Tab Change
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -80,18 +96,22 @@ export const OrdersPage: React.FC = () => {
       // Search query matching
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const matchesId = order.id.toLowerCase().includes(query);
-        const matchesCustomer = order.customerName
+        const matchesId =
+          (order.id || "").toLowerCase().includes(query) ||
+          (order.documentId && order.documentId.toLowerCase().includes(query));
+        const matchesCustomer = (order.customerName || "")
           .toLowerCase()
           .includes(query);
-        const matchesStatus = order.status.toLowerCase().includes(query);
+        const matchesStatus = (order.status || "")
+          .toLowerCase()
+          .includes(query);
         if (!matchesId && !matchesCustomer && !matchesStatus) {
           return false;
         }
       }
 
       // Tab Filter
-      if (activeTab === "today_pickup") {
+      if (effectiveActiveTab === "today_pickup") {
         const todayStr = dayjs().format("YYYY-MM-DD");
         const todayFormatted = dayjs().format("MMM D, YYYY");
         const orderPickup = dayjs(order.pickupDate).isValid()
@@ -107,12 +127,18 @@ export const OrdersPage: React.FC = () => {
         if (!isTodayPickup) {
           return false;
         }
-      } else if (activeTab !== "All" && order.status !== activeTab) {
+      } else if (
+        effectiveActiveTab !== "All" &&
+        order.status !== effectiveActiveTab
+      ) {
         return false;
       }
 
       // Dropdown Status Filter
-      if (statusFilter !== "All" && order.status !== statusFilter) {
+      if (
+        effectiveStatusFilter !== "All" &&
+        order.status !== effectiveStatusFilter
+      ) {
         return false;
       }
 
@@ -150,8 +176,8 @@ export const OrdersPage: React.FC = () => {
   }, [
     orders,
     searchQuery,
-    activeTab,
-    statusFilter,
+    effectiveActiveTab,
+    effectiveStatusFilter,
     serviceTypeFilter,
     dateRange,
   ]);
@@ -183,6 +209,7 @@ export const OrdersPage: React.FC = () => {
     setDateRange("");
     setSearchQuery("");
     setCurrentPage(1);
+    navigate("/orders");
     showSnackbar({
       message: "Order filters cleared",
       type: "info",
@@ -354,7 +381,7 @@ export const OrdersPage: React.FC = () => {
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
         {/* Filter Tabs */}
         <OrderFilterTabs
-          activeTab={activeTab}
+          activeTab={effectiveActiveTab}
           onTabChange={handleTabChange}
           totalOrdersCount={orders.length}
         />
@@ -363,7 +390,7 @@ export const OrdersPage: React.FC = () => {
         <OrderFilterBar
           serviceTypeFilter={serviceTypeFilter}
           onServiceTypeChange={setServiceTypeFilter}
-          statusFilter={statusFilter}
+          statusFilter={effectiveStatusFilter}
           onStatusFilterChange={setStatusFilter}
           dateRange={dateRange}
           onDateRangeChange={setDateRange}

@@ -54,4 +54,9 @@ export const ENDPOINTS = {
 
   // upload endpoints
   uploadDoc: `${BASE_URL}/api/upload`,
+
+  // payment endpoints
+  getAllPayments: `${BASE_URL}/api/payment-collections/logs`,
+  processRefund: (id: string) =>
+    `${BASE_URL}/api/payment-collections/${id}/refund`,
 };

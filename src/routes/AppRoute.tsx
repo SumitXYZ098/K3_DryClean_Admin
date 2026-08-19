@@ -13,6 +13,7 @@ import AddCustomerPage from "../pages/customers/AddCustomerPage";
 import DriversPage from "../pages/drivers/DriversPage";
 import AddDriverPage from "../pages/drivers/AddDriverPage";
 import ServicesPage from "../pages/services/ServicesPage";
+import PaymentsPage from "../pages/payments/PaymentsPage";
 import PlaceholderPage from "../pages/common/PlaceholderPage";
 import useAuthStore from "../store/useAuthStore";
 
@@ -119,16 +120,7 @@ export const AppRoute = () => {
         <Route path="/services/items" element={<ServicesPage />} />
         <Route path="/services/new" element={<ServicesPage />} />
         <Route path="/services/add" element={<ServicesPage />} />
-        <Route
-          path="/payments"
-          element={
-            <PlaceholderPage
-              title="Payments & Invoices"
-              icon="payments"
-              description="Review transactions, online payments, payouts, and revenue statements."
-            />
-          }
-        />
+        <Route path="/payments" element={<PaymentsPage />} />
         <Route
           path="/promotions"
           element={
