@@ -35,7 +35,7 @@ export const DEFAULT_CATEGORIES: ServiceCategory[] = [
     description: "Premium garment care",
     tag: "Apparel",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCq2-TUOf6cxgLewBa_wVowzIkvTpuO8drTVdi8TkzE-sQ0KjJNKagFAmh0KiS00jVbOG_5RM2jGkpZgGVjYLHqhp5O2GVCJpc8UIV614jRZzcr-okk4yyN1QveHTpKcPjlLIMc-cMF3FqWOKLl4d1LxSpNS_d5kxa7vsWdfGlrcWTUPk7Mpph5Zh4pzQE1PsQTW8ZLLYCXH2fcS6wUa01n3an75NNeZxdeX_xoG-8YxlGCARoSLY8R8A",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBb1tBISmkWnbrM9XRg52hIDgAMCC_fYzjHFb_Uh000VipjPSSORdMKSJiKY4J39EwigExhBQkWHEFBimCiaedGFz3lBlYWHMZCRLwV8LMUvZycjEOHyio-kmlfQHDk-kqMysg33217_2p2ONruIjZiG1UICXcOw7yqeeGEXO541cWUPBffkMN87Kz6S_tGEckvv9xiOx29uEc6QvKJ2V8EdQP-XHpLFxIcaUzdfJ1IhWN3ibwYZWO1tQ",
     isActive: true,
     itemCount: 12,
   },
@@ -46,7 +46,8 @@ export const DEFAULT_CATEGORIES: ServiceCategory[] = [
     description: "Everyday laundry service",
     tag: "Apparel",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCO1RMEngSGYAWmB6JP2dC0rF3-qIwRUrDRtFQ-0EVUqDdem-jj8yTZTSg5J3uMKBDkByvLRZS2RbvioRRCGcBiF6eoxwsMnusKur3EnGmNHAJu2qQphezZm5a8xesHHZKidQ6mL4Yuls9Ic5-g3hr-oS1X1x5Pz-2igubvL8ii-euEprmPotiT9Tjz_JnOke8vkyudZQI5UUlBUd06pOOjzRFiC2_3k2OmCYT9Z07qLmEMoKHgKR7HOw",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAy7Y5uJqSbqaRsUXFSSXxHNzprjdMw-OIkBA2XcD6expvbU_ctrn1BOU7jcEcVIaMZJSdWkIg9gT93ykYlkJyxJAAKxOHNW-LStGJ7NLNNBQcXm0epusgd2S1XdM2ezYoBJe8Ahvl2gl5qYK_pv0TYcSUe0JzL-a_qdKQuR_AVlvLkQJxsXG_iv-ogsl0EYW_lnl2ZIbcWJU6nyH7JhB_vJgrbvddrMEsQkQEhHvCqd6uYe7j7jfEigw",
+
     isActive: true,
     itemCount: 8,
   },
@@ -68,7 +69,7 @@ export const DEFAULT_CATEGORIES: ServiceCategory[] = [
     description: "Expert footwear restoration",
     tag: "Specialty",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAy7Y5uJqSbqaRsUXFSSXxHNzprjdMw-OIkBA2XcD6expvbU_ctrn1BOU7jcEcVIaMZJSdWkIg9gT93ykYlkJyxJAAKxOHNW-LStGJ7NLNNBQcXm0epusgd2S1XdM2ezYoBJe8Ahvl2gl5qYK_pv0TYcSUe0JzL-a_qdKQuR_AVlvLkQJxsXG_iv-ogsl0EYW_lnl2ZIbcWJU6nyH7JhB_vJgrbvddrMEsQkQEhHvCqd6uYe7j7jfEigw",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCO1RMEngSGYAWmB6JP2dC0rF3-qIwRUrDRtFQ-0EVUqDdem-jj8yTZTSg5J3uMKBDkByvLRZS2RbvioRRCGcBiF6eoxwsMnusKur3EnGmNHAJu2qQphezZm5a8xesHHZKidQ6mL4Yuls9Ic5-g3hr-oS1X1x5Pz-2igubvL8ii-euEprmPotiT9Tjz_JnOke8vkyudZQI5UUlBUd06pOOjzRFiC2_3k2OmCYT9Z07qLmEMoKHgKR7HOw",
     isActive: false,
     itemCount: 3,
   },
@@ -79,7 +80,7 @@ export const DEFAULT_CATEGORIES: ServiceCategory[] = [
     description: "Duvets, sheets & more",
     tag: "Household",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBb1tBISmkWnbrM9XRg52hIDgAMCC_fYzjHFb_Uh000VipjPSSORdMKSJiKY4J39EwigExhBQkWHEFBimCiaedGFz3lBlYWHMZCRLwV8LMUvZycjEOHyio-kmlfQHDk-kqMysg33217_2p2ONruIjZiG1UICXcOw7yqeeGEXO541cWUPBffkMN87Kz6S_tGEckvv9xiOx29uEc6QvKJ2V8EdQP-XHpLFxIcaUzdfJ1IhWN3ibwYZWO1tQ",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCq2-TUOf6cxgLewBa_wVowzIkvTpuO8drTVdi8TkzE-sQ0KjJNKagFAmh0KiS00jVbOG_5RM2jGkpZgGVjYLHqhp5O2GVCJpc8UIV614jRZzcr-okk4yyN1QveHTpKcPjlLIMc-cMF3FqWOKLl4d1LxSpNS_d5kxa7vsWdfGlrcWTUPk7Mpph5Zh4pzQE1PsQTW8ZLLYCXH2fcS6wUa01n3an75NNeZxdeX_xoG-8YxlGCARoSLY8R8A",
     isActive: true,
     itemCount: 15,
   },

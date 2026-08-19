@@ -21,7 +21,7 @@ export const ENDPOINTS = {
   getStats: `${BASE_URL}/api/admin/order-stats`,
   getAllOrder: `${BASE_URL}/api/orders`,
   createOrder: `${BASE_URL}/api/admin/create-order`,
-  getServicesWithVariants: `${BASE_URL}/api/admin/services-with-variants`,
+  getServicesWithVariants: `${BASE_URL}/api/admin/services-with-variants?category=Laundry`,
 
   // service and variant management endpoints
   getAllServices: `${BASE_URL}/api/services`,
@@ -31,8 +31,10 @@ export const ENDPOINTS = {
 
   getAllServiceVariants: `${BASE_URL}/api/service-variants`,
   createServiceVariant: `${BASE_URL}/api/service-variants`,
-  updateServiceVariant: (docId: string) => `${BASE_URL}/api/service-variants/${docId}`,
-  deleteServiceVariant: (docId: string) => `${BASE_URL}/api/service-variants/${docId}`,
+  updateServiceVariant: (docId: string) =>
+    `${BASE_URL}/api/service-variants/${docId}`,
+  deleteServiceVariant: (docId: string) =>
+    `${BASE_URL}/api/service-variants/${docId}`,
 
   // notification endpoints
   getAllNotification: `${BASE_URL}/api/notifications`,
